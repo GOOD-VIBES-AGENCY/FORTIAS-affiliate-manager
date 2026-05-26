@@ -805,6 +805,40 @@ textarea.form-control {
 }
 .section-title:first-child { margin-top: 0; }
 
+/* ── Share modal redesign ── */
+.share-modal-note {
+  font-size: 12px; font-weight: 600; color: #991b1b;
+  background: #fff5f5; border: 1px solid #fecaca;
+  border-radius: 8px; padding: 8px 12px; margin: 0 0 14px;
+}
+/* Segment control */
+.share-seg {
+  display: flex; background: #f1f5f9;
+  border-radius: 10px; padding: 4px; gap: 4px;
+  margin-bottom: 14px;
+}
+.share-seg-btn {
+  flex: 1; border: none; background: transparent;
+  border-radius: 7px; padding: 9px 4px;
+  font-size: 13px; font-weight: 600; color: #64748b;
+  cursor: pointer; transition: all 0.15s;
+  font-family: inherit;
+}
+.share-seg-btn:hover { color: #1e3a5f; background: rgba(255,255,255,0.6); }
+.share-seg-btn.active {
+  background: #fff; color: #0d9488;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+/* Description box */
+.share-desc-box {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 10px; padding: 14px 16px;
+}
+.share-desc-icon { font-size: 24px; flex-shrink: 0; }
+.share-desc-title { font-size: 14px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.share-desc-text  { font-size: 12px; color: #64748b; line-height: 1.6; }
+
 /* ── Sync badge ── */
 .sync-badge {
   display: inline-flex; align-items: center;

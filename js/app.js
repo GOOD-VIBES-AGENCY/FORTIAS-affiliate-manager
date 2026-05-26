@@ -788,70 +788,64 @@ const App = {
     const modal = document.createElement('div');
     modal.id = 'share-modal';
     modal.className = 'modal-overlay';
-    const perms = [
-      { value: 'staff',      icon: '🏢', label: '自社メンバー用',   badge: 'STAFF ONLY',  badgeCls: 'perm-badge-staff',
-        desc: `全情報・提示報酬率(${esc(String(clientRate))}%)・インフル報酬率(${esc(String(infRate))}%)・マージン・内部メモすべて表示` },
-      { value: 'influencer', icon: '⭐', label: 'インフルエンサー用', badge: 'INFLUENCER', badgeCls: 'perm-badge-influencer',
-        desc: `案件概要・スケジュール・自分の報酬率(${esc(String(infRate))}%)・販売実績を表示。クライアント請求率・マージン非表示` },
-      { value: 'client',     icon: '👔', label: 'クライアント用',    badge: 'CLIENT',      badgeCls: 'perm-badge-client',
-        desc: `案件概要・スケジュール・提示報酬率(${esc(String(clientRate))}%)・販売実績を表示。インフル報酬率・マージン非表示` }
-    ];
+    // Permission descriptions
+    const permDescs = {
+      staff:      `全情報を表示。提示報酬率 ${esc(String(clientRate))}% ・インフル報酬率 ${esc(String(infRate))}% ・マージン・内部メモ・GO/STOP判定すべて見えます。`,
+      influencer: `案件概要・自分の報酬率 ${esc(String(infRate))}% ・販売実績のみ表示。クライアント請求率・マージン・内部メモは非表示。`,
+      client:     `案件概要・提示報酬率 ${esc(String(clientRate))}% ・販売実績のみ表示。インフル報酬率・マージン・内部メモは非表示。`
+    };
 
-    modal.innerHTML = `
-      <div class="modal-box">
-        <div class="modal-header">
-          <h2>🔗 共有リンク生成</h2>
-          <button type="button" id="close-share-modal" style="background:none;border:none;cursor:pointer;font-size:18px;color:#64748b;padding:4px 8px">✕</button>
-        </div>
-        <div class="modal-body">
-          <p style="font-size:12px;color:#64748b;margin:0 0 14px">共有する相手に応じてタイプを選択してください。<br>
-          <strong style="color:#991b1b">🔒 マージンはいかなる場合も非表示です。</strong></p>
-
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="perm-options">
-            ${perms.map((p, i) => `
-            <div class="perm-card ${i === 0 ? 'perm-card-active' : ''}" data-perm="${p.value}" style="border:2px solid ${i === 0 ? '#0d9488' : '#e2e8f0'};background:${i === 0 ? '#f0fdfa' : '#fff'};border-radius:10px;padding:12px 16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:flex-start;gap:12px">
-              <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${i === 0 ? '#0d9488' : '#cbd5e1'};background:${i === 0 ? '#0d9488' : '#fff'};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center">
-                ${i === 0 ? '<span style="color:#fff;font-size:12px;font-weight:700">✓</span>' : ''}
-              </div>
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                  <span style="font-size:14px;font-weight:700;color:#1e3a5f">${p.icon} ${p.label}</span>
-                  <span class="perm-badge ${p.badgeCls}">${p.badge}</span>
-                </div>
-                <div style="font-size:12px;color:#64748b;line-height:1.5">${p.desc}</div>
-              </div>
-            </div>`).join('')}
-          </div>
-
-          <div id="share-url-section" style="display:none">
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:11px;font-family:monospace;word-break:break-all;color:#475569;margin-bottom:8px" id="share-url-text"></div>
-            <button type="button" class="btn-copy" id="copy-share-url-btn">📋 URLをコピー</button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" id="close-share-modal-2">キャンセル</button>
-          <button type="button" class="btn btn-primary" id="generate-share-url-btn" data-case-id="${esc(caseId)}">URLを生成</button>
-        </div>
-      </div>`;
+    modal.innerHTML = [
+      '<div class="modal-box">',
+        '<div class="modal-header">',
+          '<h2>\uD83D\uDD17 \u5171\u6709\u30EA\u30F3\u30AF\u751F\u6210</h2>',
+          '<button type="button" id="close-share-modal" class="btn btn-ghost">\u2715</button>',
+        '</div>',
+        '<div class="modal-body">',
+          '<p class="share-modal-note">\uD83D\uDD12 \u30DE\u30FC\u30B8\u30F3\u306F\u3044\u304B\u306A\u308B\u5834\u5408\u3082\u975E\u8868\u793A\u3067\u3059</p>',
+          '<!-- \u30BB\u30B0\u30E1\u30F3\u30C8\u30B3\u30F3\u30C8\u30ED\u30FC\u30EB -->',
+          '<div class="share-seg" id="share-seg">',
+            '<button type="button" class="share-seg-btn active" data-perm="staff">\uD83C\uDFE2 \u81EA\u793E</button>',
+            '<button type="button" class="share-seg-btn" data-perm="influencer">\u2B50 \u30A4\u30F3\u30D5\u30EB</button>',
+            '<button type="button" class="share-seg-btn" data-perm="client">\uD83D\uDC54 \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8</button>',
+          '</div>',
+          '<!-- \u8AAC\u660E\u30A8\u30EA\u30A2 -->',
+          '<div class="share-desc-box" id="share-desc-box">',
+            '<div class="share-desc-icon" id="share-desc-icon">\uD83C\uDFE2</div>',
+            '<div>',
+              '<div class="share-desc-title" id="share-desc-title">\u81EA\u793E\u30E1\u30F3\u30D0\u30FC\u7528</div>',
+              '<div class="share-desc-text" id="share-desc-text">' + permDescs.staff + '</div>',
+            '</div>',
+          '</div>',
+          '<!-- URL\u8868\u793A -->',
+          '<div id="share-url-section" style="display:none;margin-top:12px">',
+            '<div class="share-url-box" id="share-url-text"></div>',
+            '<button type="button" class="btn-copy" id="copy-share-url-btn">\uD83D\uDCCB URL\u3092\u30B3\u30D4\u30FC</button>',
+          '</div>',
+        '</div>',
+        '<div class="modal-footer">',
+          '<button type="button" class="btn btn-outline" id="close-share-modal-2">\u30AD\u30E3\u30F3\u30BB\u30EB</button>',
+          '<button type="button" class="btn btn-primary" id="generate-share-url-btn" data-case-id="' + esc(caseId) + '">URL\u3092\u751F\u6210</button>',
+        '</div>',
+      '</div>'
+    ].join('');
 
     document.body.appendChild(modal);
 
-    // Permission card click (no radio inputs - pure div buttons)
+    // Segment control click
+    const descIcons  = { staff: '🏢', influencer: '⭐', client: '👔' };
+    const descTitles = { staff: '自社メンバー用', influencer: 'インフルエンサー用', client: 'クライアント用' };
     let selectedPerm = 'staff';
-    modal.querySelectorAll('.perm-card').forEach(card => {
-      card.addEventListener('click', () => {
-        selectedPerm = card.dataset.perm;
-        modal.querySelectorAll('.perm-card').forEach(c => {
-          const active = c.dataset.perm === selectedPerm;
-          c.style.border = `2px solid ${active ? '#0d9488' : '#e2e8f0'}`;
-          c.style.background = active ? '#f0fdfa' : '#fff';
-          const dot = c.querySelector('div[style*="border-radius:50%"]');
-          if (dot) {
-            dot.style.border = `2px solid ${active ? '#0d9488' : '#cbd5e1'}`;
-            dot.style.background = active ? '#0d9488' : '#fff';
-            dot.innerHTML = active ? '<span style="color:#fff;font-size:12px;font-weight:700">✓</span>' : '';
-          }
-        });
+
+    modal.querySelectorAll('.share-seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedPerm = btn.dataset.perm;
+        modal.querySelectorAll('.share-seg-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.perm === selectedPerm)
+        );
+        modal.querySelector('#share-desc-icon').textContent  = descIcons[selectedPerm];
+        modal.querySelector('#share-desc-title').textContent = descTitles[selectedPerm];
+        modal.querySelector('#share-desc-text').textContent  = permDescs[selectedPerm];
         modal.querySelector('#share-url-section').style.display = 'none';
       });
     });
