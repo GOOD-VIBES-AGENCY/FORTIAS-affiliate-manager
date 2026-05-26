@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GVA 案件共有ページ</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;margin:0;padding:0;min-height:100vh}
+    a{color:#0d9488;text-decoration:none}
+    .page{max-width:720px;margin:0 auto;padding:24px 16px 60px}
+
+    /* Header */
+    .site-header{background:#1e3a5f;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .site-header .logo{font-size:16px;font-weight:800;letter-spacing:-0.5px}
+    .site-header .logo span{color:#14b8a6}
+    .perm-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.03em}
+    .perm-staff{background:#854d0e;color:#fff}
+    .perm-influencer{background:#166534;color:#fff}
+    .perm-client{background:#1d4ed8;color:#fff}
+
+    /* Cards */
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+    .card-header{padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc}
+    .card-header h2{margin:0;font-size:15px;font-weight:700;color:#1e3a5f;display:flex;align-items:center;gap:8px}
+    .card-body{padding:18px 20px}
+
+    /* Info rows */
+    .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f8fafc;gap:16px;flex-wrap:wrap}
+    .info-row:last-child{border-bottom:none}
+    .info-label{font-size:12px;font-weight:600;color:#64748b;min-width:140px;flex-shrink:0}
+    .info-value{font-size:13px;font-weight:500;color:#1e293b;text-align:right;flex:1;word-break:break-all}
+
+    /* Status badges */
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+    .badge-phase0{background:#f1f5f9;color:#64748b}
+    .badge-phase1{background:#fef9c3;color:#854d0e}
+    .badge-phase2{background:#dbeafe;color:#1d4ed8}
+    .badge-phase3{background:#dcfce7;color:#166534}
+    .badge-phase4{background:#ede9fe;color:#6d28d9}
+    .badge-done{background:#ccfbf1;color:#134e4a}
+    .badge-A{background:#dcfce7;color:#166534}
+    .badge-B{background:#dbeafe;color:#1d4ed8}
+    .badge-C{background:#fef9c3;color:#854d0e}
+    .badge-D{background:#fee2e2;color:#991b1b}
+
+    /* Phase progress */
+    .progress-row{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:16px}
+    .progress-step{flex:1;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;transition:all 0.3s;background:#f8fafc;color:#94a3b8}
+    .progress-step.done{background:#0d9488;color:#fff}
+    .progress-step.current{background:#1e3a5f;color:#fff}
+
+    /* Revenue cards */
+    .rev-card{border-radius:10px;padding:14px 16px;margin-bottom:10px}
+    .rev-card.client{background:#eff6ff;border:1.5px solid #93c5fd}
+    .rev-card.influencer{background:#f0fdf4;border:1.5px solid #86efac}
+    .rev-title{font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em}
+    .rev-amount{font-size:22px;font-weight:800}
+    .rev-card.client .rev-amount{color:#1d4ed8}
+    .rev-card.influencer .rev-amount{color:#16a34a}
+    .rev-sub{font-size:11px;margin-top:3px}
+    .rev-card.client .rev-sub{color:#3b82f6}
+    .rev-card.influencer .rev-sub{color:#22c55e}
+
+    /* Restriction notice */
+    .restriction-box{background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+    .restriction-box .icon{font-size:18px;flex-shrink:0}
+    .restriction-box p{margin:0;font-size:12px;color:#854d0e;line-height:1.6}
+
+    /* Hidden / redacted */
+    .redacted{display:inline-block;background:#e2e8f0;color:#e2e8f0;border-radius:4px;padding:2px 8px;font-size:12px;user-select:none}
+
+    /* Print button */
+    .print-btn{position:fixed;bottom:20px;right:20px;background:#1e3a5f;color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);font-family:inherit;display:flex;align-items:center;gap:8px}
+    .print-btn:hover{background:#152d4d}
+
+    /* Error */
+    .error-box{text-align:center;padding:60px 20px;color:#94a3b8}
+    .error-box .icon{font-size:60px;margin-bottom:16px}
+    .error-box h2{font-size:20px;color:#1e3a5f;margin-bottom:8px}
+    .error-box p{font-size:14px;line-height:1.6}
+
+    /* Section separator */
+    .section-sep{border:none;border-top:1px solid #f1f5f9;margin:12px 0}
+
+    /* KPI grid */
+    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
+    .kpi-label{font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px}
+    .kpi-value{font-size:22px;font-weight:800;color:#1e3a5f}
+    .kpi-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+
+    /* Contacts */
+    .contact-pill{display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;width:100%}
+    .contact-pill .role{font-size:11px;color:#64748b;background:#e2e8f0;padding:2px 6px;border-radius:4px}
+
+    @media print {
+      .print-btn{display:none}
+      .site-header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      body{background:#fff}
+    }
+    @media(max-width:600px){
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .info-row{flex-direction:column}
+      .info-value{text-align:left}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Site header -->
+<header class="site-header">
+  <div class="logo">GOOD VIBES <span>AGENCY</span></div>
+  <div id="perm-badge-container"></div>
+</header>
+
+<!-- Main content -->
+<div class="page" id="page-content">
+  <div class="error-box">
+    <div class="icon">⏳</div>
+    <h2>読み込み中...</h2>
+  </div>
+</div>
+
+<!-- Print button -->
+<button class="print-btn" onclick="window.print()" id="print-btn" style="display:none">
+  🖨 印刷 / PDF保存
+</button>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Decode payload from hash ── */
+  function decodePayload() {
+    const hash = location.hash;
+    const match = hash.match(/[#&]data=([^&]+)/);
+    if (!match) return null;
+    try {
+      const json = decodeURIComponent(escape(atob(match[1])));
+      return JSON.parse(json);
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function fmtMoney(n) {
+    if (n === null || n === undefined || n === '') return '—';
+    return '¥' + Number(n).toLocaleString('ja-JP');
+  }
+  function fmtNum(n) {
+    if (n === null || n === undefined || n === '') return '—';
+    return Number(n).toLocaleString('ja-JP');
+  }
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDatetime(s) {
+    if (!s) return '—';
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    return d.toLocaleString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+  function fmtDate(s) {
+    if (!s) return '—';
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    return d.toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
+  }
+
+  function infoRow(label, value, opts) {
+    opts = opts || {};
+    const val = (value === null || value === undefined || value === '') ? '—' : value;
+    return `<div class="info-row">
+      <span class="info-label">${esc(label)}</span>
+      <span class="info-value">${opts.html ? val : esc(String(val))}</span>
+    </div>`;
+  }
+
+  function statusLabel(status) {
+    const m = {phase0:'ヒアリング中',phase1:'GO/STOP判定',phase2:'実施準備中',phase3:'当日運用中',phase4:'精算中',done:'完了'};
+    const c = {phase0:'badge-phase0',phase1:'badge-phase1',phase2:'badge-phase2',phase3:'badge-phase3',phase4:'badge-phase4',done:'badge-done'};
+    return `<span class="badge ${c[status]||'badge-phase0'}">${esc(m[status]||status)}</span>`;
+  }
+
+  /* ── Build progress row ── */
+  function progressRow(currentStatus) {
+    const phases = ['phase0','phase1','phase2','phase3','phase4'];
+    const labels = ['ヒアリング','判定','準備','当日','精算'];
+    const order = ['phase0','phase1','phase2','phase3','phase4','done'];
+    const currentIdx = order.indexOf(currentStatus);
+    return `<div class="progress-row">
+      ${phases.map((p,i) => {
+        const pIdx = order.indexOf(p);
+        const isDone = currentIdx > pIdx;
+        const isCurr = currentStatus === p;
+        const cls = isDone ? 'done' : (isCurr ? 'current' : '');
+        return `<div class="progress-step ${cls}">${isDone ? '✓' : (i)} ${labels[i]}</div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  /* ── Permission level config ── */
+  const PERM_CONFIG = {
+    staff: {
+      label: '自社メンバー',
+      icon: '🏢',
+      cls: 'perm-staff',
+      showClientRate: true,
+      showInfluencerRate: true,
+      showGvaMargin: true,
+      showInternalNotes: true,
+      showJudgment: true,
+      showContacts: 'all'
+    },
+    influencer: {
+      label: 'インフルエンサー',
+      icon: '⭐',
+      cls: 'perm-influencer',
+      showClientRate: false,
+      showInfluencerRate: true,
+      showGvaMargin: false,
+      showInternalNotes: false,
+      showJudgment: false,
+      showContacts: 'self'
+    },
+    client: {
+      label: 'クライアント',
+      icon: '👔',
+      cls: 'perm-client',
+      showClientRate: true,
+      showInfluencerRate: false,
+      showGvaMargin: false,
+      showInternalNotes: false,
+      showJudgment: false,
+      showContacts: 'none'
+    }
+  };
+
+  /* ── Main render ── */
+  function render() {
+    const data = decodePayload();
+    const page = document.getElementById('page-content');
+
+    if (!data) {
+      page.innerHTML = `<div class="error-box">
+        <div class="icon">🔒</div>
+        <h2>URLが無効です</h2>
+        <p>共有URLが正しくないか、期限が切れている可能性があります。<br>
+        GVA担当者に新しいURLを発行してもらってください。</p>
+      </div>`;
+      return;
+    }
+
+    const perm = data._perm || 'staff';
+    const cfg = PERM_CONFIG[perm] || PERM_CONFIG.staff;
+    const p0 = data.phase0 || {};
+    const p4 = data.phase4 || {};
+
+    // Permission badge
+    document.getElementById('perm-badge-container').innerHTML =
+      `<span class="perm-pill ${cfg.cls}">${cfg.icon} ${cfg.label}用</span>`;
+
+    // Show print button
+    document.getElementById('print-btn').style.display = 'flex';
+
+    // Restriction notice
+    let restrictionHtml = '';
+    if (perm === 'influencer') {
+      restrictionHtml = `<div class="restriction-box">
+        <span class="icon">ℹ️</span>
+        <p>このページはインフルエンサー向けの情報です。クライアントへの請求率・GVAマージンは含まれていません。</p>
+      </div>`;
+    } else if (perm === 'client') {
+      restrictionHtml = `<div class="restriction-box">
+        <span class="icon">ℹ️</span>
+        <p>このページはクライアント向けの情報です。インフルエンサーへの支払率は含まれていません。</p>
+      </div>`;
+    }
+
+    /* ── KPI Cards ── */
+    let kpiHtml = '';
+    if (p4.finalSales !== undefined || p4.approvedCount !== undefined) {
+      const approved = p4.approvedCount !== undefined ? p4.approvedCount : p4.finalSales;
+      const rejected = p4.rejectedCount;
+      const approvalRate = (approved !== undefined && rejected !== undefined && (approved + rejected) > 0)
+        ? ((approved / (approved + rejected)) * 100).toFixed(1) + '%' : '—';
+      kpiHtml = `<div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">最終販売数</div>
+          <div class="kpi-value">${fmtNum(p4.finalSales)}</div>
+          <div class="kpi-sub">セット</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">承認数</div>
+          <div class="kpi-value">${fmtNum(approved)}</div>
+          <div class="kpi-sub">件</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">承認率</div>
+          <div class="kpi-value">${esc(approvalRate)}</div>
+          <div class="kpi-sub">&nbsp;</div>
+        </div>
+      </div>`;
+    }
+
+    /* ── Revenue ── */
+    let revenueHtml = '';
+    if (perm === 'staff') {
+      // Staff sees both
+      if (p4.client_revenue !== undefined) {
+        revenueHtml += `<div class="rev-card client">
+          <div class="rev-title">👔 クライアント請求額</div>
+          <div class="rev-amount">${fmtMoney(p4.client_revenue)}</div>
+          <div class="rev-sub">提示報酬率: ${esc(String(p0.client_reward_rate || '—'))}%</div>
+        </div>`;
+      }
+      if (p4.influencer_revenue !== undefined) {
+        revenueHtml += `<div class="rev-card influencer">
+          <div class="rev-title">⭐ インフル支払額</div>
+          <div class="rev-amount">${fmtMoney(p4.influencer_revenue)}</div>
+          <div class="rev-sub">インフル報酬率: ${esc(String(p0.influencer_reward_rate || '—'))}%</div>
+        </div>`;
+      }
+      if (p4.client_revenue !== undefined && p4.influencer_revenue !== undefined) {
+        const margin = (p4.client_revenue || 0) - (p4.influencer_revenue || 0);
+        revenueHtml += `<div style="background:#fefce8;border:1.5px solid #fde047;border-radius:10px;padding:14px 16px;margin-bottom:10px">
+          <div class="rev-title" style="color:#92400e">🏢 GVAマージン</div>
+          <div class="rev-amount" style="color:#ca8a04">${fmtMoney(margin)}</div>
+        </div>`;
+      }
+    } else if (perm === 'influencer' && p4.influencer_revenue !== undefined) {
+      revenueHtml = `<div class="rev-card influencer">
+        <div class="rev-title">⭐ あなたへの支払額</div>
+        <div class="rev-amount">${fmtMoney(p4.influencer_revenue)}</div>
+        <div class="rev-sub">報酬率: ${esc(String(p0.influencer_reward_rate || '—'))}%</div>
+      </div>`;
+    } else if (perm === 'client' && p4.client_revenue !== undefined) {
+      revenueHtml = `<div class="rev-card client">
+        <div class="rev-title">👔 請求額</div>
+        <div class="rev-amount">${fmtMoney(p4.client_revenue)}</div>
+        <div class="rev-sub">提示報酬率: ${esc(String(p0.client_reward_rate || '—'))}%</div>
+      </div>`;
+    }
+
+    /* ── Reward condition rows ── */
+    let rewardRows = '';
+    rewardRows += infoRow('報酬タイプ', p0.reward_type || '—');
+    rewardRows += infoRow('計上タイミング', p0.conversion_point || '—');
+    rewardRows += infoRow('否認条件', p0.rejection_conditions || '—');
+    rewardRows += infoRow('締め日', p0.payment_closing || '—');
+    rewardRows += infoRow('支払日', p0.payment_date || '—');
+
+    if (cfg.showClientRate && p0.client_reward_rate) {
+      rewardRows += infoRow('提示報酬率（クライアント請求）', p0.client_reward_rate + '%');
+    }
+    if (cfg.showInfluencerRate && p0.influencer_reward_rate) {
+      rewardRows += infoRow('インフル成果報酬率', p0.influencer_reward_rate + '%');
+    }
+
+    /* ── Emergency contacts ── */
+    let contactsHtml = '';
+    if (cfg.showContacts !== 'none' && p0.emergency_contacts && p0.emergency_contacts.length) {
+      const contacts = p0.emergency_contacts;
+      const contactList = contacts.map(c => `
+        <div class="contact-pill">
+          <span class="role">${esc(c.role || '担当')}</span>
+          <span>${esc(c.name || '—')}</span>
+          ${c.phone && c.phone !== '-' ? `<span style="color:#0d9488;margin-left:auto">${esc(c.phone)}</span>` : ''}
+        </div>`).join('');
+      contactsHtml = `
+        <div class="card">
+          <div class="card-header"><h2>🚨 緊急連絡先</h2></div>
+          <div class="card-body">${contactList}</div>
+        </div>`;
+    }
+
+    /* ── Notes (staff only) ── */
+    let notesHtml = '';
+    if (cfg.showInternalNotes && p4.notes) {
+      notesHtml = `
+        <div class="card">
+          <div class="card-header"><h2>📝 特記事項（内部メモ）</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:#374151;line-height:1.8;white-space:pre-wrap;margin:0">${esc(p4.notes)}</p>
+          </div>
+        </div>`;
+    }
+
+    /* ── Assemble page ── */
+    const updatedStr = data.updatedAt ? fmtDate(data.updatedAt) : '—';
+    const createdStr = data.createdAt ? fmtDate(data.createdAt) : '—';
+
+    page.innerHTML = `
+      ${restrictionHtml}
+
+      <!-- Case overview -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📋 案件概要</h2>
+        </div>
+        <div class="card-body">
+          ${infoRow('案件名', data.name || '—')}
+          ${infoRow('ブランド', data.brand || '—')}
+          ${infoRow('プラットフォーム', data.platform || '—')}
+          ${infoRow('インフルエンサー', data.influencer || '—')}
+          ${data.influencer_ig ? infoRow('Instagram', '@' + data.influencer_ig) : ''}
+          ${infoRow('ステータス', statusLabel(data.status || 'phase0'), {html:true})}
+          ${cfg.showJudgment && data.judgment && data.judgment !== 'pending'
+            ? infoRow('GO/STOP判定', `<span class="badge badge-${data.judgment}">${data.judgment}</span>`, {html:true}) : ''}
+          ${infoRow('作成日', createdStr)}
+          ${infoRow('更新日', updatedStr)}
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="card">
+        <div class="card-header"><h2>📈 フェーズ進捗</h2></div>
+        <div class="card-body" style="padding-top:12px">
+          ${progressRow(data.status || 'phase0')}
+        </div>
+      </div>
+
+      <!-- Schedule & product -->
+      <div class="card">
+        <div class="card-header"><h2>🗓 販売スケジュール・商品情報</h2></div>
+        <div class="card-body">
+          ${p0.event_name_official ? infoRow('正式イベント名', p0.event_name_official) : ''}
+          ${p0.period_start ? infoRow('販売開始', fmtDatetime(p0.period_start)) : ''}
+          ${p0.period_end   ? infoRow('販売終了', fmtDatetime(p0.period_end)) : ''}
+          ${p0.pre_announce_date ? infoRow('事前告知開始', fmtDate(p0.pre_announce_date)) : ''}
+          ${p0.post_start_date   ? infoRow('投稿解禁日',   fmtDate(p0.post_start_date)) : ''}
+          <hr class="section-sep">
+          ${p0.product_name  ? infoRow('商品名', p0.product_name) : ''}
+          ${p0.set_contents  ? infoRow('セット内容', p0.set_contents) : ''}
+          ${p0.price_sale    ? infoRow('セール価格', fmtMoney(p0.price_sale)) : ''}
+          ${p0.price_regular ? infoRow('通常価格', fmtMoney(p0.price_regular)) : ''}
+          ${p0.discount_rate ? infoRow('割引率', p0.discount_rate + '%') : ''}
+          ${p0.purchase_limit_per_person ? infoRow('購入上限', p0.purchase_limit_per_person + '点/人') : ''}
+          ${p0.shipping_origin ? infoRow('発送元', p0.shipping_origin) : ''}
+        </div>
+      </div>
+
+      <!-- Novelty / Gift -->
+      ${(p0.novelty_count || p0.novelty_after_gift) ? `
+      <div class="card">
+        <div class="card-header"><h2>🎁 先着特典・ギフト情報</h2></div>
+        <div class="card-body">
+          ${p0.novelty_count  ? infoRow('先着特典 個数', fmtNum(p0.novelty_count) + '個') : ''}
+          ${p0.novelty_type   ? infoRow('ノベルティ種別', p0.novelty_type) : ''}
+          ${p0.novelty_after_gift ? infoRow('先着終了後 全員特典', p0.novelty_after_gift) : ''}
+          ${p0.page_behavior_after_gift ? infoRow('先着終了後のページ挙動', p0.page_behavior_after_gift) : ''}
+          ${p0.gift_announce_strategy   ? infoRow('告知戦略', p0.gift_announce_strategy) : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- Reward conditions -->
+      <div class="card">
+        <div class="card-header"><h2>💰 報酬条件</h2></div>
+        <div class="card-body">${rewardRows}</div>
+      </div>
+
+      <!-- Sales KPIs -->
+      ${kpiHtml ? `
+      <div class="card">
+        <div class="card-header"><h2>📊 販売実績</h2></div>
+        <div class="card-body" style="padding-top:12px">${kpiHtml}</div>
+      </div>` : ''}
+
+      <!-- Revenue breakdown -->
+      ${revenueHtml ? `
+      <div class="card">
+        <div class="card-header"><h2>💴 報酬明細</h2></div>
+        <div class="card-body">${revenueHtml}</div>
+      </div>` : ''}
+
+      <!-- Posting rules (visible to influencer + staff) -->
+      ${(perm === 'influencer' || perm === 'staff') && (p0.pr_tag_rule || p0.ng_expressions || p0.lp_url) ? `
+      <div class="card">
+        <div class="card-header"><h2>📣 投稿ルール・リンク</h2></div>
+        <div class="card-body">
+          ${p0.pr_tag_rule    ? infoRow('PRタグルール', p0.pr_tag_rule) : ''}
+          ${p0.ng_expressions ? infoRow('NG表現', p0.ng_expressions) : ''}
+          ${p0.lp_url         ? infoRow('商品ページURL', `<a href="${esc(p0.lp_url)}" target="_blank" rel="noopener">${esc(p0.lp_url)}</a>`, {html:true}) : ''}
+          ${p0.brand_messaging ? infoRow('ブランドメッセージ', p0.brand_messaging) : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- Sales report schedule (influencer + staff) -->
+      ${(perm === 'influencer' || perm === 'staff') ? `
+      <div class="card">
+        <div class="card-header"><h2>📡 売上報告スケジュール（当日）</h2></div>
+        <div class="card-body">
+          <div style="font-size:13px;color:#374151;line-height:2.2">
+            <div>🔥 <strong>0〜30分</strong> — 5分ごとに報告</div>
+            <div>📈 <strong>30分〜3時間</strong> — 30分ごとに報告</div>
+            <div>🏁 <strong>3時間以降</strong> — 1時間ごとに報告（在庫状況により随時）</div>
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- Contacts -->
+      ${contactsHtml}
+
+      <!-- Internal notes (staff only) -->
+      ${notesHtml}
+
+      <!-- Footer -->
+      <div style="text-align:center;padding:20px 0;color:#94a3b8;font-size:11px">
+        <div style="margin-bottom:4px">GOOD VIBES AGENCY — アフィリエイト案件管理システム</div>
+        <div>このページは機密情報を含みます。無断転送を禁じます。</div>
+      </div>`;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

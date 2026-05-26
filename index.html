@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GVA アフィリエイト案件管理</title>
+  <meta name="description" content="GOOD VIBES AGENCY — アフィリエイトキャンペーン管理システム">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          colors: {
+            navy: { DEFAULT: '#1e3a5f', dark: '#152d4d', light: '#2a4a7f' },
+            teal: { DEFAULT: '#0d9488', light: '#14b8a6', dark: '#0f766e' }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- App Shell -->
+  <div id="app-shell">
+
+    <!-- ── Sidebar (desktop) ── -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-text">GVA</div>
+        <div class="logo-sub">アフィリエイト案件管理</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="section-title" style="color:rgba(255,255,255,0.35);padding:0 4px 4px">メニュー</div>
+
+        <a href="#/" class="nav-item active" data-nav="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>ダッシュボード</span>
+        </a>
+        <button class="nav-item" data-nav="new" onclick="App.navigate('#/new')">
+          <span class="nav-icon">➕</span>
+          <span>新規案件作成</span>
+        </button>
+
+        <div class="section-title" style="color:rgba(255,255,255,0.35);padding:8px 4px 4px;margin-top:12px">フェーズ</div>
+        <div style="padding:0 4px;font-size:12px;color:rgba(255,255,255,0.4);line-height:2">
+          <div>0 ヒアリングシート</div>
+          <div>1 GO/STOP判定</div>
+          <div>2 実施準備</div>
+          <div>3 当日売上管理</div>
+          <div>4 精算・振り返り</div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:4px">GOOD VIBES AGENCY</div>
+        <div>v1.0.0 — localStorage</div>
+      </div>
+    </aside>
+
+    <!-- ── Main wrapper ── -->
+    <div id="main-wrapper">
+
+      <!-- Top bar (mobile only) -->
+      <header id="topbar">
+        <div class="topbar-title">GVA 案件管理</div>
+        <a href="#/" style="color:#fff;font-size:18px;text-decoration:none">📊</a>
+      </header>
+
+      <!-- Main content area -->
+      <main id="main-content">
+        <!-- Rendered by app.js -->
+        <div style="display:flex;align-items:center;justify-content:center;height:200px;color:#94a3b8">
+          <div>読み込み中...</div>
+        </div>
+      </main>
+
+    </div><!-- /main-wrapper -->
+
+  </div><!-- /app-shell -->
+
+  <!-- ── Bottom nav (mobile) ── -->
+  <nav id="bottom-nav">
+    <div class="bottom-nav-items">
+      <a href="#/" class="bottom-nav-item active" data-nav="dashboard">
+        <span class="bnav-icon">📊</span>
+        <span>一覧</span>
+      </a>
+      <button class="bottom-nav-item" data-nav="new" onclick="App.navigate('#/new')">
+        <span class="bnav-icon">➕</span>
+        <span>新規</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Scripts (order matters: storage → share → phases → app) -->
+  <script src="js/storage.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/phases.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
