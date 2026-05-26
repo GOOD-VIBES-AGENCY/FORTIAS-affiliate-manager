@@ -720,12 +720,26 @@ textarea.form-control {
   #sidebar { display: none; }
   #topbar { display: flex; }
   #main-wrapper { margin-left: 0; }
-  #main-content { padding: 12px 10px 100px; }
+  #main-content { padding: 10px 10px 100px; max-width: 100%; }
   #bottom-nav { display: block; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid-3 { grid-template-columns: 1fr; }
   .contact-row { grid-template-columns: 1fr 1fr; }
   .contact-row > *:nth-child(3) { grid-column: 1 / -1; }
+
+  /* 案件名タイトル */
+  h1 { font-size: 15px !important; line-height: 1.4 !important; word-break: break-all; }
+  .case-detail-meta { font-size: 11px !important; }
+
+  /* 進捗バー：5ステップを全部表示 */
+  .progress-bar-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .progress-bar-wrap::-webkit-scrollbar { display: none; }
+  .progress-bar-wrap > div { min-width: 340px; }
+  .progress-bar-wrap > div > div { font-size: 10px !important; padding: 5px 2px !important; }
 
   /* Phase tabs: 横スクロール */
   .phase-tabs {
@@ -739,47 +753,78 @@ textarea.form-control {
   .phase-tab {
     flex-shrink: 0;
     white-space: nowrap;
-    font-size: 12px;
-    padding: 7px 12px;
+    font-size: 11px;
+    padding: 6px 10px;
   }
 
+  /* 警告バナー */
+  [style*="background:#fff7ed"], [style*="background:#f0f9ff"] {
+    white-space: normal !important;
+    word-break: break-all !important;
+    font-size: 11px !important;
+  }
+
+  /* フォームヒント */
+  .form-hint { white-space: normal; word-break: break-all; font-size: 11px; }
+
   /* Case cards */
-  .case-card { padding: 14px; }
-  .case-card-name { font-size: 14px; }
+  .case-card { padding: 12px; }
+  .case-card-name { font-size: 13px; word-break: break-all; }
+  .case-card-meta { font-size: 11px; flex-wrap: wrap; gap: 4px; }
 
   /* Stats grid: 2列 */
-  .stat-card { padding: 12px; }
-  .stat-value { font-size: 22px; }
+  .stat-card { padding: 10px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 10px; }
 
   /* Dashboard header */
-  h1[style*='22px'] { font-size: 18px !important; }
+  .dashboard-header h1 { font-size: 18px !important; }
 
-  /* Modal フル幅 */
-  .modal-box { border-radius: 12px 12px 0 0; max-height: 85vh; }
+  /* Modal: 画面下からシート */
+  .modal-box { border-radius: 16px 16px 0 0; max-height: 90vh; }
   .modal-overlay { align-items: flex-end; padding: 0; }
-  .modal-body { padding: 16px; }
-  .modal-header { padding: 16px; }
+  .modal-body { padding: 14px 16px; }
+  .modal-header { padding: 14px 16px; }
   .modal-footer { padding: 12px 16px; }
 
+  /* 共有モーダルセグメント */
+  .share-seg { flex-wrap: nowrap; }
+  .share-seg-btn { font-size: 12px; padding: 8px 4px; }
+  .share-desc-box { padding: 10px 12px; }
+  .share-desc-icon { font-size: 20px; }
+  .share-desc-title { font-size: 13px; }
+  .share-desc-text { font-size: 11px; }
+
   /* Revenue cards */
-  .revenue-card { padding: 12px 14px; }
-  .revenue-amount { font-size: 20px; }
+  .revenue-card { padding: 10px 12px; }
+  .revenue-amount { font-size: 18px; }
 
   /* Collapse headers */
-  .collapse-header { font-size: 13px; padding: 12px 14px; }
+  .collapse-header { font-size: 13px; padding: 11px 12px; }
 
   /* Judgment box */
-  .judgment-box { padding: 16px; }
-  .judgment-letter { font-size: 40px; }
+  .judgment-box { padding: 14px; }
+  .judgment-letter { font-size: 36px; }
 
   /* Share URL box */
-  .share-url-box { font-size: 11px; }
+  .share-url-box { font-size: 10px; }
 
   /* Buttons */
   .btn-copy { width: 100%; text-align: center; }
 
-  /* Top bar title */
-  #topbar .topbar-title { font-size: 14px; }
+  /* Top bar */
+  #topbar { padding: 10px 12px; }
+  #topbar .topbar-title { font-size: 13px; }
+
+  /* Card body padding */
+  .card-body { padding: 12px; }
+  .card-header { padding: 10px 12px; }
+  .card-header h3 { font-size: 13px; }
+
+  /* 案件ヘッダーエリア */
+  .case-header-area { flex-direction: column; align-items: flex-start !important; gap: 8px !important; }
+  .case-header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .case-header-actions .btn { font-size: 11px; padding: 4px 8px; }
 }
 
 /* ── Animations ── */

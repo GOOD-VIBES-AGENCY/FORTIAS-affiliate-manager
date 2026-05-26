@@ -284,19 +284,17 @@ const App = {
     mc.innerHTML = `
       <div class="fade-in">
         <!-- Header -->
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-          <div>
-            <button class="btn btn-ghost btn-sm" onclick="App.navigate('#/')" style="margin-bottom:6px;padding-left:0">← 案件一覧</button>
-            <h1 style="font-size:18px;font-weight:800;color:var(--navy);margin:0;line-height:1.3">${esc(caseData.name)}</h1>
-            <div style="font-size:12px;color:#64748b;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+        <div class="case-header-area" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="min-width:0;flex:1">
+            <button class="btn btn-ghost btn-sm" onclick="App.navigate('#/')" style="margin-bottom:4px;padding-left:0;font-size:12px">← 案件一覧</button>
+            <h1 style="font-size:16px;font-weight:800;color:var(--navy);margin:0;line-height:1.3;word-break:break-all">${esc(caseData.name)}</h1>
+            <div class="case-detail-meta" style="font-size:12px;color:#64748b;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
               <span>${esc(caseData.brand)}</span>
-              <span>·</span>
-              <span>${esc(caseData.platform)}</span>
-              <span>·</span>
-              <span>⭐ ${esc(caseData.influencer)}</span>
+              <span>·</span><span>${esc(caseData.platform)}</span>
+              <span>·</span><span>⭐ ${esc(caseData.influencer)}</span>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="case-header-actions" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="badge ${smCls[caseData.status] || 'badge-phase0'}">${sm[caseData.status] || caseData.status}</span>
             ${caseData.judgment && caseData.judgment !== 'pending'
               ? `<span class="badge badge-judge badge-${caseData.judgment}">判定: ${esc(caseData.judgment)}</span>` : ''}
@@ -306,8 +304,8 @@ const App = {
         </div>
 
         <!-- Status Progress bar -->
-        <div style="margin-bottom:16px">
-          <div style="display:flex;gap:0;background:#f1f5f9;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">
+        <div class="progress-bar-wrap" style="margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <div style="display:flex;gap:0;background:#f1f5f9;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;min-width:320px">
             ${['phase0','phase1','phase2','phase3','phase4'].map((p, i) => {
               const idx = phaseOrder.indexOf(p);
               const isDone = currentPhaseIdx > idx;
