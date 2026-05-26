@@ -5,11 +5,11 @@
 ───────────────────────────────────────────────────────────── */
 const PHASE0_SECTIONS = [
   {
-    id: 'schedule', title: 'スケジュール制約', icon: '⏰', open: true,
+    id: 'schedule', title: 'スケジュール・申請期限', icon: '⏰', open: true,
     fields: [
-      { key: 'rakuten_deadline',    label: '楽天側締め切り',   type: 'date',     required: true },
-      { key: 'reply_deadline',      label: '返答期限',      type: 'date',     required: true },
-      { key: 'event_name_official', label: '正式イベント名',   type: 'text',     required: true, hint: '楽天コンテンツ・投稿に使用する公式名称' }
+      { key: 'platform_deadline', label: 'プラットフォーム申請期限', type: 'date', hint: '楽天・ Qoo10 等、プラットフォームへの事前申請期限' },
+      { key: 'reply_deadline',   label: '封社返答期限',  type: 'date', required: true },
+      { key: 'event_name_official', label: 'セール・イベント名（公式名称）', type: 'text', hint: '投稿・クリエイティブで使用する正式名称。選不要な場合は空欄可' }
     ]
   },
   {
@@ -32,10 +32,11 @@ const PHASE0_SECTIONS = [
       { key: 'discount_rate',   label: '割引率（%）',        type: 'number', hint: '自動計算または手入力' },
       { key: 'set_contents',    label: 'セット内容',          type: 'textarea' },
       { key: 'purchase_limit_per_person', label: '購入上限数/人', type: 'text' },
-      { key: 'platform_coupon_applicable', label: 'プラットフォームクーポン適用可', type: 'select',
-        hint: '楽天マラソン・ Qoo10メガ割等の専用クーポン',
-        options: [{ v:'yes', l:'はい' }, { v:'no', l:'いいえ' }, { v:'partial', l:'一部適用' }] },
-      { key: 'other_coupon_compatible',   label: '他クーポン併用', type: 'select',
+      { key: 'platform_coupon_applicable', label: 'プラットフォーム特定クーポン適用可', type: 'select',
+        hint: '楽天マラソン・ Qoo10メガ割・自社クーポン等。適用ない場合は「なし」',
+        options: [{ v:'none', l:'なし' }, { v:'yes', l:'あり（全商品）' }, { v:'partial', l:'あり（一部）' }] },
+      { key: 'other_coupon_compatible', label: '他クーポン・ポイント併用', type: 'select',
+        hint: '購入者が別途のクーポンやポイントの併用可否',
         options: [{ v:'yes', l:'可' }, { v:'no', l:'不可' }, { v:'details', l:'条件あり' }] },
       { key: 'shipping_origin', label: '発送元', type: 'select',
         options: [{ v:'国内', l:'国内' }, { v:'韓国', l:'韓国' }, { v:'その他', l:'その他' }] },
@@ -284,6 +285,17 @@ const Phases = {
         </div>`
       : '';
 
+    // 楽天・ Qoo10 などプラットフォーム固有の注意事項バナー
+    const platformBanners = {
+      '楽天': `<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#9a3412">
+        ⚠️ <strong>楽天セール案件</strong>：セール前に楽天側への事前申請が必要です。「プラットフォーム申請期限」を必ず確認してください。
+      </div>`,
+      'Qoo10': `<div style="background:#f0f9ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af">
+        ⚠️ <strong>Qoo10メガ割案件</strong>：メガ割期間が定期開催されます。开催スケジュールと商品登録期限を事前に確認してください。
+      </div>`
+    };
+    const platformBanner = platformBanners[caseData.platform] || '';
+
     const sections = PHASE0_SECTIONS.map(sec => {
       const fieldsHtml = sec.fields.map(f => renderField(f, p0[f.key], caseId)).join('');
       const isOpen = sec.open ? 'open' : '';
@@ -294,6 +306,7 @@ const Phases = {
             <span class="collapse-icon">▾</span>
           </button>
           <div class="collapse-body ${isOpen}" id="collapse-${esc(sec.id)}">
+            ${sec.id === 'schedule' ? platformBanner : ''}
             ${sec.id === 'reward' ? marginBadge : ''}
             <div class="form-grid">${fieldsHtml}</div>
           </div>

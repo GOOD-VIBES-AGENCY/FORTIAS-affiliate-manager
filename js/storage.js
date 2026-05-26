@@ -123,7 +123,7 @@ const Storage = {
         pre_announce_date: '2026-05-04',
         post_start_date: '2026-05-04',
         event_name_official: '楽天カミトクSALE',
-        rakuten_deadline: '2026-05-02',
+        platform_deadline: '2026-05-02',
         reply_deadline: '2026-05-01',
         price_regular: '13600',
         price_sale: '5984',

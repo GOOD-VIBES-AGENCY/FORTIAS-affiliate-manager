@@ -148,9 +148,18 @@ const Share = {
   getShareUrl(caseData, permissionLevel = 'staff') {
     const encoded = this.encodeCase(caseData, permissionLevel);
     if (!encoded) return null;
-    // Work for both local file and GitHub Pages
-    const path = location.href.split('#')[0];
-    const base = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
+    // Robust base URL: works with/without trailing slash, custom domains, subdirectories
+    const href = location.href.split('#')[0].split('?')[0];
+    let base;
+    if (href.endsWith('/')) {
+      base = href;
+    } else if (/\/[^/]+\.[^/]+$/.test(href)) {
+      // Ends with a file (e.g. /index.html) → strip filename
+      base = href.substring(0, href.lastIndexOf('/') + 1);
+    } else {
+      // Directory path without trailing slash → add slash
+      base = href + '/';
+    }
     return `${base}share.html#data=${encoded}`;
   },
 
