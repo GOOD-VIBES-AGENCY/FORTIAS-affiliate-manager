@@ -25,6 +25,10 @@ body {
 #app-shell {
   display: flex;
   min-height: 100vh;
+  /* #bottom-navはこの外側なので安全に overflow をクリップできる */
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 #sidebar {
@@ -56,6 +60,8 @@ body {
   width: 100%;
   margin: 0 auto;
   min-width: 0;
+  /* コンテンツ内のハミ出しもクリップ */
+  overflow-x: hidden;
 }
 
 /* ── Sidebar ── */
@@ -729,8 +735,7 @@ textarea.form-control {
     padding: 12px 12px 110px;
     width: 100%;
     max-width: 100vw;
-    /* overflow-x はここでだけ設定—fixedを壊さない */
-    overflow-x: clip;
+    overflow-x: hidden;
   }
   #bottom-nav { display: block; }
 
