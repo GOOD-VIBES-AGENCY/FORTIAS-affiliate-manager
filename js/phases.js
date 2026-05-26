@@ -32,8 +32,9 @@ const PHASE0_SECTIONS = [
       { key: 'discount_rate',   label: '割引率（%）',        type: 'number', hint: '自動計算または手入力' },
       { key: 'set_contents',    label: 'セット内容',          type: 'textarea' },
       { key: 'purchase_limit_per_person', label: '購入上限数/人', type: 'text' },
-      { key: 'rakuten_coupon_applicable', label: '楽天クーポン適用可', type: 'select',
-        options: [{ v:'yes', l:'はい' }, { v:'no', l:'いいえ' }] },
+      { key: 'platform_coupon_applicable', label: 'プラットフォームクーポン適用可', type: 'select',
+        hint: '楽天マラソン・ Qoo10メガ割等の専用クーポン',
+        options: [{ v:'yes', l:'はい' }, { v:'no', l:'いいえ' }, { v:'partial', l:'一部適用' }] },
       { key: 'other_coupon_compatible',   label: '他クーポン併用', type: 'select',
         options: [{ v:'yes', l:'可' }, { v:'no', l:'不可' }, { v:'details', l:'条件あり' }] },
       { key: 'shipping_origin', label: '発送元', type: 'select',
@@ -820,8 +821,7 @@ ${contactLines}
     const infRevenue    = Math.round(approved * price * infRate);
     const gvaMargin     = clientRevenue - infRevenue;
 
-    const revSection = (approved && price)
-      ? `<div style="margin-bottom:20px">
+    const revSection = `<div id="phase4-revenue-box" style="margin-bottom:20px">${(approved && price) ? `
           <div class="revenue-card client">
             <div class="revenue-title">👔 クライアント請求額（${p0.client_reward_rate || 0}%）</div>
             <div class="revenue-amount">${fmtMoney(clientRevenue)}</div>
@@ -843,8 +843,7 @@ ${contactLines}
               = クライアント請求 − インフル支払
             </div>
           </div>
-        </div>`
-      : '';
+        </div>` : '<div style="color:#94a3b8;font-size:13px;padding:12px 0">承認数と販売価格を入力すると自動計算されます</div>'}</div>`;
 
     return `
       <div class="fade-in" data-case-id="${esc(caseId)}" data-phase="phase4">

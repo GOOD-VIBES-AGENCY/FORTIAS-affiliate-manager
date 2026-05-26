@@ -105,6 +105,11 @@
       .kpi-grid{grid-template-columns:repeat(2,1fr)}
       .info-row{flex-direction:column}
       .info-value{text-align:left}
+      .page{padding:16px 12px 80px}
+      .card-body{padding:14px 14px}
+      .rev-amount{font-size:18px}
+      .kpi-value{font-size:18px}
+      .site-header{padding:10px 14px}
     }
   </style>
 </head>
@@ -112,7 +117,7 @@
 
 <!-- Site header -->
 <header class="site-header">
-  <div class="logo">GOOD VIBES <span>AGENCY</span></div>
+  <div class="logo">FORTIAS <span>アフィリエイト</span></div>
   <div id="perm-badge-container"></div>
 </header>
 
@@ -139,9 +144,14 @@
     const match = hash.match(/[#&]data=([^&]+)/);
     if (!match) return null;
     try {
-      const json = decodeURIComponent(escape(atob(match[1])));
+      // URL-safe base64 decode (- → +, _ → /)
+      let encoded = match[1].replace(/-/g, '+').replace(/_/g, '/');
+      const pad = encoded.length % 4;
+      if (pad) encoded += '='.repeat(4 - pad);
+      const json = decodeURIComponent(escape(atob(encoded)));
       return JSON.parse(json);
     } catch(e) {
+      console.error('decode error', e);
       return null;
     }
   }

@@ -184,9 +184,13 @@ const App = {
                   <select class="form-control" name="platform" required>
                     <option value="">— 選択 —</option>
                     <option value="楽天">楽天</option>
+                    <option value="Qoo10">Qoo10</option>
                     <option value="Amazon">Amazon</option>
                     <option value="Yahoo!ショッピング">Yahoo!ショッピング</option>
                     <option value="自社EC">自社EC</option>
+                    <option value="SHOPLIST">SHOPLIST</option>
+                    <option value="ZOZOTOWN">ZOZOTOWN</option>
+                    <option value="メルカリShops">メルカリShops</option>
                     <option value="その他">その他</option>
                   </select>
                 </div>
@@ -404,6 +408,11 @@ const App = {
         // Flat case fields (name, brand, etc.)
         caseData[field] = t.value;
       }
+    }
+
+    // Phase 4 リアルタイム計算
+    if (phase === 'phase4' && ['approvedCount','rejectedCount','finalSales'].includes(t.dataset.field)) {
+      this.updateRevenueDisplay(caseId);
     }
 
     // Phase 1 STOP items
@@ -695,6 +704,51 @@ const App = {
       statCards[1].textContent = rem.toLocaleString();
       statCards[1].style.color = rem === 0 ? '#dc2626' : 'var(--navy)';
     }
+  },
+
+  /* リアルタイム報酬計算 */
+  updateRevenueDisplay(caseId) {
+    const caseData = Storage.getById(caseId);
+    if (!caseData) return;
+    const p0 = caseData.phase0 || {};
+    const p4 = caseData.phase4 || {};
+
+    // DOMから最新値を取得
+    const approvedEl = document.querySelector(`[data-case-id="${caseId}"][data-field="approvedCount"]`);
+    const approved = approvedEl ? parseInt(approvedEl.value || 0) : parseInt(p4.approvedCount || 0);
+
+    const clientRate = parseFloat(p0.client_reward_rate || 0) / 100;
+    const infRate    = parseFloat(p0.influencer_reward_rate || p0.reward_rate || 0) / 100;
+    const price      = parseFloat(p0.price_sale || 0);
+
+    const clientRevenue = Math.round(approved * price * clientRate);
+    const infRevenue    = Math.round(approved * price * infRate);
+    const gvaMargin     = clientRevenue - infRevenue;
+    const fmt = n => '\u00a5' + n.toLocaleString('ja-JP');
+
+    const revBox = document.getElementById('phase4-revenue-box');
+    if (!revBox || !approved || !price) return;
+
+    revBox.innerHTML = `
+      <div class="revenue-card client">
+        <div class="revenue-title">👔 クライアント請求額（${p0.client_reward_rate || 0}%）</div>
+        <div class="revenue-amount" id="rt-client">${fmt(clientRevenue)}</div>
+        <div style="font-size:12px;color:#1d4ed8;margin-top:4px">
+          = ${approved.toLocaleString()} 件 × ${fmt(price)} × ${p0.client_reward_rate || 0}%
+        </div>
+      </div>
+      <div class="revenue-card influencer">
+        <div class="revenue-title">⭐ インフル支払額（${p0.influencer_reward_rate || p0.reward_rate || 0}%）</div>
+        <div class="revenue-amount" id="rt-influencer">${fmt(infRevenue)}</div>
+        <div style="font-size:12px;color:#166534;margin-top:4px">
+          = ${approved.toLocaleString()} 件 × ${fmt(price)} × ${p0.influencer_reward_rate || p0.reward_rate || 0}%
+        </div>
+      </div>
+      <div class="revenue-card gva">
+        <div class="revenue-title">🏢 マージン（内部管理）</div>
+        <div class="revenue-amount" id="rt-margin">${fmt(gvaMargin)}</div>
+        <div style="font-size:12px;color:#92400e;margin-top:4px">クライアント請求 − インフル支払</div>
+      </div>`;
   },
 
   exportCSV(caseId) {

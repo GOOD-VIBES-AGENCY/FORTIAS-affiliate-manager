@@ -126,7 +126,9 @@ const Share = {
 
     try {
       const json = JSON.stringify(payload);
-      return btoa(unescape(encodeURIComponent(json)));
+      // URL-safe base64: + → -, / → _, strip padding =
+      return btoa(unescape(encodeURIComponent(json)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     } catch (e) {
       console.error('Share encode error:', e);
       return null;
@@ -147,7 +149,8 @@ const Share = {
     const encoded = this.encodeCase(caseData, permissionLevel);
     if (!encoded) return null;
     // Work for both local file and GitHub Pages
-    const base = location.href.replace(/\/[^/?#]*([?#].*)?$/, '/');
+    const path = location.href.split('#')[0];
+    const base = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
     return `${base}share.html#data=${encoded}`;
   },
 
