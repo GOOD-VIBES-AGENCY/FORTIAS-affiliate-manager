@@ -7,6 +7,9 @@ const App = {
   saveTimeout: null,
   currentCaseId: null,
   currentPhase: 'phase0',
+  talentFilter: null,
+  calendarYear: null,
+  calendarMonth: null,
 
   /* ── Init ── */
   init() {
@@ -30,6 +33,16 @@ const App = {
     if (hash === '#/new') {
       this.renderNewCase();
       this.setActiveNav('new');
+      return;
+    }
+    if (hash === '#/talents') {
+      this.renderTalents();
+      this.setActiveNav('talents');
+      return;
+    }
+    if (hash === '#/calendar') {
+      this.renderCalendar();
+      this.setActiveNav('calendar');
       return;
     }
     const caseMatch = hash.match(/^#\/case\/([^/]+)(?:\/(.+))?$/);
@@ -56,9 +69,17 @@ const App = {
     location.hash = hash;
   },
 
+  /* ── Talent filter helper ── */
+  filterByTalent(influencer) {
+    this.talentFilter = influencer;
+    this.navigate('#/');
+  },
+
   /* ── Dashboard ── */
   renderDashboard() {
-    const cases = Storage.getAll();
+    const allCases = Storage.getAll();
+    const filterInfluencer = this.talentFilter;
+    const cases = filterInfluencer ? allCases.filter(c => c.influencer === filterInfluencer) : allCases;
     const mc = document.getElementById('main-content');
     if (!mc) return;
 
@@ -104,6 +125,7 @@ const App = {
           const jLbl = c.judgment || '—';
           const updStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('ja-JP') : '—';
           const isLive = c.status === 'phase3';
+          const formSubmitted = (c.phase0 || {}).form_submitted;
           return `
             <a href="#/case/${encodeURIComponent(c.id)}" class="case-card fade-in">
               <div class="case-card-name">${esc(c.name)}</div>
@@ -118,6 +140,7 @@ const App = {
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <span class="badge ${sm.cls}">${isLive ? '🔴 ' : ''}${sm.label}</span>
                   <span class="badge badge-judge ${jCls}">判定: ${esc(jLbl)}</span>
+                  ${formSubmitted ? '<span class="badge badge-form-submitted">📋 フォーム入力済</span>' : ''}
                 </div>
                 <span style="font-size:11px;color:#94a3b8">更新: ${updStr}</span>
               </div>
@@ -133,6 +156,7 @@ const App = {
           </div>
           <button class="btn btn-primary" onclick="App.navigate('#/new')">+ 新規案件</button>
         </div>
+        ${filterInfluencer ? `<div class="talent-filter-bar"><span style="font-size:13px;color:#0f766e">⭐ ${esc(filterInfluencer)} でフィルター中</span><button class="btn btn-ghost btn-sm" id="clear-talent-filter">✕ 解除</button></div>` : ''}
         <!-- Stats -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
           <div class="stat-card">
@@ -299,6 +323,7 @@ const App = {
             ${caseData.judgment && caseData.judgment !== 'pending'
               ? `<span class="badge badge-judge badge-${caseData.judgment}">判定: ${esc(caseData.judgment)}</span>` : ''}
             <button class="btn btn-outline btn-sm" id="share-btn" data-case-id="${esc(id)}">🔗 共有リンク生成</button>
+            <button class="btn btn-outline btn-sm" id="form-url-btn" data-case-id="${esc(id)}">📋 ブランド向けフォーム発行</button>
             <button class="btn btn-danger btn-sm" id="delete-case-btn" data-case-id="${esc(id)}">🗑 削除</button>
           </div>
         </div>
@@ -479,6 +504,74 @@ const App = {
     const btn = t.closest('button') || t;
     const caseId = btn.dataset.caseId;
 
+    // Clear talent filter
+    if (btn.id === 'clear-talent-filter') {
+      this.talentFilter = null;
+      this.renderDashboard();
+      this.setActiveNav('dashboard');
+      return;
+    }
+
+    // Calendar nav
+    if (btn.id === 'cal-nav-prev') {
+      if (this.calendarYear === null) { const n = new Date(); this.calendarYear = n.getFullYear(); this.calendarMonth = n.getMonth(); }
+      this.calendarMonth--;
+      if (this.calendarMonth < 0) { this.calendarMonth = 11; this.calendarYear--; }
+      this.renderCalendar(); this.setActiveNav('calendar'); return;
+    }
+    if (btn.id === 'cal-nav-next') {
+      if (this.calendarYear === null) { const n = new Date(); this.calendarYear = n.getFullYear(); this.calendarMonth = n.getMonth(); }
+      this.calendarMonth++;
+      if (this.calendarMonth > 11) { this.calendarMonth = 0; this.calendarYear++; }
+      this.renderCalendar(); this.setActiveNav('calendar'); return;
+    }
+
+    // Calendar event click
+    const calEvt = t.closest('.cal-event');
+    if (calEvt) {
+      try {
+        const data = JSON.parse(calEvt.dataset.event || '{}');
+        this.showCalEventPopup(data, e.clientX, e.clientY);
+      } catch {}
+      return;
+    }
+
+    // Talent card click
+    const talentCard = t.closest('.talent-card');
+    if (talentCard && talentCard.dataset.influencer) {
+      e.preventDefault();
+      this.openTalentDetailModal(talentCard.dataset.influencer);
+      return;
+    }
+
+    // Form URL button
+    if (btn.id === 'form-url-btn' && caseId) {
+      this.openFormUrlModal(caseId);
+      return;
+    }
+
+    // Auto-score button
+    if (btn.id === 'auto-score-btn' && caseId) {
+      Phases.showAutoScoreModal(caseId);
+      return;
+    }
+
+    // Apply auto-score
+    if (btn.id === 'apply-auto-score-btn' && caseId) {
+      Phases.applyAutoScore(caseId);
+      const modal = document.getElementById('auto-score-modal');
+      if (modal) modal.remove();
+      this.navigate(`#/case/${encodeURIComponent(caseId)}/phase1`);
+      return;
+    }
+
+    // Close auto-score modal
+    if (btn.id === 'close-auto-score-modal') {
+      const modal = document.getElementById('auto-score-modal');
+      if (modal) modal.remove();
+      return;
+    }
+
     // Delete case
     if (btn.id === 'delete-case-btn' && caseId) {
       if (confirm('この案件を削除しますか？この操作は元に戻せません。')) {
@@ -581,6 +674,12 @@ const App = {
     // CSV export
     if (btn.id === 'export-csv-btn' && caseId) {
       this.exportCSV(caseId);
+      return;
+    }
+
+    // AI auto-score
+    if (btn.id === 'auto-score-btn' && caseId) {
+      this.openAutoScoreModal(caseId);
       return;
     }
 
@@ -704,6 +803,150 @@ const App = {
     }
   },
 
+  /* AI自動判定 */
+  openAutoScoreModal(caseId) {
+    const caseData = Storage.getById(caseId);
+    if (!caseData) return;
+    const p0 = caseData.phase0 || {};
+    const contacts = p0.emergency_contacts || [];
+    const validContacts = contacts.filter(c => c.name && c.name.trim());
+
+    // アップレート率記述のパース
+    const parseApproval = v => {
+      if (!v) return 0;
+      const m = String(v).match(/(\d+)/);
+      return m ? parseFloat(m[1]) : 0;
+    };
+
+    // 即STOP判定ルール
+    const stopRules = {
+      conversion_point_confirmed:        { check: () => !!p0.conversion_point,           reason: '計上ポイント（Phase 0）が未入力' },
+      rejection_conditions_clear:        { check: () => !!p0.rejection_conditions,       reason: '否認条件（Phase 0）が未入力' },
+      point_deduction_policy_confirmed:  { check: () => !!p0.point_deduction_policy,     reason: 'ポイント控除ポリシーが未入力' },
+      payment_cycle_confirmed:           { check: () => !!(p0.payment_closing && p0.payment_date), reason: '締日・支払日（Phase 0）が未入力' },
+      approval_rate_disclosed:           { check: () => !!p0.approval_rate,              reason: '承認率が未入力' },
+      sales_cap_over_policy_confirmed:   { check: () => !!p0.stock_count,               reason: '在庫数が未入力' },
+      coupon_operation_verified:         { check: () => !!p0.platform_coupon_applicable, reason: 'クーポン適用可否が未選択' },
+      price_display_matches_checkout:    { check: () => !!p0.price_sale,                reason: '販売価格（Phase 0）が未入力' },
+      server_load_verified:              { check: () => !!p0.lp_url,                    reason: 'LP URLが未入力' },
+      tracking_tag_installed:            { check: () => !!p0.tracking_method,           reason: '計測方法が未入力' },
+      stock_confirmed:                   { check: () => parseInt(p0.stock_count || 0) > 0, reason: '在庫数が0または未入力' },
+      shipping_lead_confirmed:           { check: () => !!p0.shipping_lead_time,        reason: '出荷リードタイムが未入力' },
+      stockout_policy_confirmed:         { check: () => !!p0.return_policy,             reason: '返品・在庫対応ポリシーが未入力' },
+      cs_contact_ready:                  { check: () => !!p0.cs_contact,               reason: 'CS連絡先が未入力' },
+      return_flow_clear:                 { check: () => !!p0.return_policy,             reason: '返品・解約導線が未入力' },
+      incident_response_confirmed:       { check: () => validContacts.length >= 2,      reason: '緊急連絡先が2名未満' },
+      pr_rule_confirmed:                 { check: () => !!p0.pr_tag_rule,              reason: 'PR表記ルールが未入力' },
+      pharma_law_checked:                { check: () => !!p0.ng_expressions,           reason: 'NG表現・薬機法確認が未入力' },
+      ng_expressions_shared:             { check: () => !!p0.ng_expressions,           reason: 'NG表現が未入力' },
+      material_usage_clear:              { check: () => !!p0.material_usage_restrictions, reason: '素材使用制限が未入力' },
+      emergency_contacts_confirmed:      { check: () => validContacts.length >= 3,      reason: '緊急連絡先が3名未満' },
+      sales_report_schedule_agreed:      { check: () => p0.sales_report_phases_agreed === 'yes', reason: '売上報告スケジュールが「対応可能」になっていない' }
+    };
+
+    // 要注意判定ルール
+    const cautionRules = {
+      approval_rate_80plus:      { check: () => parseApproval(p0.approval_rate) >= 80,   reason: '承認率が80%未満または不明' },
+      payment_60days_or_less:    { check: () => parseInt(p0.payment_cycle || 999) <= 60, reason: '支払サイクルが60日超える' },
+      price_attractive:          { check: () => parseFloat(p0.discount_rate || 0) >= 40, reason: '割引率が40%未満' },
+      lp_speed_ok:               { check: () => !!p0.lp_url,                             reason: 'LP URLが未入力' },
+      guest_purchase_available:  { check: () => ['\u697d\u5929','Qoo10','Amazon','Yahoo'].some(s => (p0.sales_site||'').includes(s)), reason: '大手プラットフォーム以外の場合、ゲスト購入可否を確認' },
+      smartphone_ui_ok:          { check: () => !!p0.lp_url,                             reason: 'LPのスマホ UIを目視確認' },
+      stock_sufficient:          { check: () => parseInt(p0.stock_count || 0) >= 3000,  reason: '在庫数が3,000未満' },
+      novelty_restocking_fast:   { check: () => !!p0.novelty_count,                      reason: 'ノベルティ数が未入力' },
+      no_delivery_delay:         { check: () => (p0.shipping_lead_time||'').includes('\u55b6\u696d\u65e5'), reason: '出荷リードタイムに「\u55b6\u696d\u65e5\u300d記載なし' },
+      cs_hours_sufficient:       { check: () => !!p0.cs_contact,                         reason: 'CS連絡先が未入力' },
+      gifting_available:         { check: () => parseInt(p0.novelty_count || 0) > 0,    reason: 'ノベルティなし' },
+      materials_sufficient:      { check: () => !!p0.material_usage_restrictions,        reason: '素材使用制限が未入力' },
+      draft_check_ok:            { check: () => p0.draft_check_required === 'yes',       reason: '下書きチェックが「不要」' },
+      competitor_ng_reasonable:  { check: () => !!p0.competitor_ng,                      reason: '競合NGfangesが未入力' },
+      low_incident_risk:         { check: () => !!p0.ng_expressions,                     reason: 'NG表現が未入力' },
+      influencer_confirmed:      { check: () => !!caseData.influencer,                   reason: 'タレント名が未入力' },
+      holiday_support_ok:        { check: () => p0.holiday_support_ok === 'yes',         reason: '休日・深夜対応が「不可」' },
+      contact_responsive:        { check: () => validContacts.length >= 2,               reason: '緊急連絡先が2名未満' }
+    };
+
+    // 判定実行
+    const stopResults = {};
+    const cautionResults = {};
+    Object.entries(stopRules).forEach(([k, r]) => { stopResults[k] = { pass: r.check(), reason: r.reason }; });
+    Object.entries(cautionRules).forEach(([k, r]) => { cautionResults[k] = { pass: r.check(), reason: r.reason }; });
+
+    const stopPass  = Object.values(stopResults).filter(r => r.pass).length;
+    const stopTotal = Object.keys(stopRules).length;
+    const cautionFail = Object.values(cautionResults).filter(r => !r.pass).length;
+    const allStopOk = stopPass === stopTotal;
+    const judgment = !allStopOk ? 'D' : cautionFail <= 2 ? 'A' : cautionFail <= 6 ? 'B' : 'C';
+    const jColors  = { A:'#166534', B:'#1d4ed8', C:'#854d0e', D:'#991b1b' };
+    const jBgs     = { A:'#dcfce7', B:'#dbeafe', C:'#fef9c3', D:'#fee2e2' };
+    const jLabels  = { A:'GO（最良）', B:'GO（条件付き）', C:'要再確認', D:'STOP' };
+
+    const stopFails = Object.entries(stopResults).filter(([, r]) => !r.pass)
+      .map(([k, r]) => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #fee2e2">
+        <span style="color:#dc2626;flex-shrink:0">❌</span>
+        <span style="font-size:12px;color:#1e293b">${esc(r.reason)}</span>
+      </div>`).join('');
+    const cautionFails = Object.entries(cautionResults).filter(([, r]) => !r.pass)
+      .map(([k, r]) => `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #fef9c3">
+        <span style="color:#d97706;flex-shrink:0">⚠️</span>
+        <span style="font-size:12px;color:#1e293b">${esc(r.reason)}</span>
+      </div>`).join('');
+
+    const existing = document.getElementById('auto-score-modal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'auto-score-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>🤖 自動判定結果</h2>
+          <button type="button" id="close-auto-score" class="btn btn-ghost">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:${jBgs[judgment]};border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:40px;font-weight:900;color:${jColors[judgment]}">${judgment}</div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:${jColors[judgment]}">${jLabels[judgment]}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:2px">即STOP: ${stopPass}/${stopTotal}項目クリア　要注意: ${cautionFail}項目未クリア</div>
+            </div>
+          </div>
+          ${stopFails ? `
+          <div style="margin-bottom:14px">
+            <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">🔴 未クリアの即STOP項目</div>
+            <div style="background:#fff5f5;border:1.5px solid #fecaca;border-radius:8px;padding:8px 12px">${stopFails}</div>
+          </div>` : '<div style="color:#16a34a;font-size:13px;font-weight:600;margin-bottom:14px">✅ 即STOP項目は全てクリアです</div>'}
+          ${cautionFails ? `
+          <div style="margin-bottom:14px">
+            <div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:6px">⚠️ 要注意項目（${cautionFail}件）</div>
+            <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:8px 12px">${cautionFails}</div>
+          </div>` : ''}
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="close-auto-score-2" class="btn btn-outline">閉じる</button>
+          <button type="button" id="apply-auto-score" data-case-id="${esc(caseId)}" class="btn btn-primary">💾 Phase 1に適用する</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('#close-auto-score').addEventListener('click', closeModal);
+    modal.querySelector('#close-auto-score-2').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    modal.querySelector('#apply-auto-score').addEventListener('click', () => {
+      const cd = Storage.getById(caseId);
+      if (!cd) return;
+      cd.phase1 = cd.phase1 || { stop_items: {}, caution_items: {} };
+      Object.entries(stopResults).forEach(([k, r]) => { cd.phase1.stop_items[k] = r.pass; });
+      Object.entries(cautionResults).forEach(([k, r]) => { cd.phase1.caution_items[k] = r.pass; });
+      cd.judgment = judgment;
+      Storage.save(cd);
+      closeModal();
+      this.renderCaseDetail(caseId, 'phase1');
+    });
+  },
+
   /* リアルタイム報酬計算 */
   updateRevenueDisplay(caseId) {
     const caseData = Storage.getById(caseId);
@@ -769,6 +1012,419 @@ const App = {
     a.download = `${caseData.name}_売上ログ.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  },
+
+  /* ── Talent Performance DB ── */
+  renderTalents() {
+    const cases = Storage.getAll();
+    const mc = document.getElementById('main-content');
+    if (!mc) return;
+
+    // Group by influencer
+    const talentMap = {};
+    for (const c of cases) {
+      const name = c.influencer || '未設定';
+      const ig = c.influencer_ig || '';
+      if (!talentMap[name]) talentMap[name] = { name, ig, cases: [] };
+      talentMap[name].cases.push(c);
+    }
+    const talents = Object.values(talentMap);
+
+    // Summary stats
+    const totalSales = cases.reduce((s, c) => s + parseInt((c.phase4 || {}).finalSales || 0), 0);
+    const totalRevenue = cases.reduce((s, c) => {
+      const p0 = c.phase0 || {}, p4 = c.phase4 || {};
+      const rate = parseFloat(p0.client_reward_rate || 0) / 100;
+      const price = parseFloat(p0.price_sale || 0);
+      const approved = parseInt(p4.approvedCount || 0);
+      return s + Math.round(approved * price * rate);
+    }, 0);
+
+    const cards = talents.map(t => {
+      const totalTalentSales = t.cases.reduce((s, c) => s + parseInt((c.phase4 || {}).finalSales || 0), 0);
+      const approvalRates = t.cases
+        .filter(c => parseInt((c.phase4 || {}).finalSales) > 0)
+        .map(c => parseInt((c.phase4 || {}).approvedCount || 0) / parseInt((c.phase4 || {}).finalSales || 1) * 100);
+      const avgApproval = approvalRates.length ? (approvalRates.reduce((s, r) => s + r, 0) / approvalRates.length).toFixed(0) + '%' : '—';
+
+      const platforms = t.cases.map(c => c.platform || '').filter(p => p);
+      const platformCount = {};
+      platforms.forEach(p => platformCount[p] = (platformCount[p] || 0) + 1);
+      const topPlatform = Object.entries(platformCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+      const bestCase = [...t.cases].sort((a, b) => parseInt((b.phase4 || {}).finalSales || 0) - parseInt((a.phase4 || {}).finalSales || 0))[0];
+      const bestSales = parseInt((bestCase?.phase4 || {}).finalSales || 0);
+
+      return `
+        <div class="talent-card" data-influencer="${esc(t.name)}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div class="talent-name">${esc(t.name)}</div>
+              ${t.ig ? `<a href="https://instagram.com/${esc(t.ig)}" target="_blank" class="talent-ig" onclick="event.stopPropagation()">@${esc(t.ig)}</a>` : '<span style="font-size:12px;color:#94a3b8">IG未設定</span>'}
+            </div>
+            <span style="font-size:28px;line-height:1">⭐</span>
+          </div>
+          <div class="talent-stats">
+            <div class="talent-stat">
+              <div class="talent-stat-label">総案件数</div>
+              <div class="talent-stat-value">${t.cases.length}</div>
+            </div>
+            <div class="talent-stat">
+              <div class="talent-stat-label">総販売数</div>
+              <div class="talent-stat-value">${totalTalentSales.toLocaleString()}</div>
+            </div>
+            <div class="talent-stat">
+              <div class="talent-stat-label">平均承認率</div>
+              <div class="talent-stat-value" style="font-size:16px">${avgApproval}</div>
+            </div>
+            <div class="talent-stat">
+              <div class="talent-stat-label">最多プラットフォーム</div>
+              <div class="talent-stat-value" style="font-size:13px">${esc(topPlatform)}</div>
+            </div>
+          </div>
+          ${bestSales > 0 ? `
+          <div class="talent-best-case">
+            <div class="talent-best-case-label">🏆 ベスト案件</div>
+            <div class="talent-best-case-name">${esc(bestCase.name)}</div>
+            <div style="font-size:12px;color:#0f766e;margin-top:4px">${bestSales.toLocaleString()} セット販売</div>
+          </div>` : ''}
+          <button class="btn btn-outline btn-sm" style="width:100%" onclick="event.stopPropagation();App.filterByTalent('${esc(t.name)}')"　>案件を見る →</button>
+        </div>`;
+    }).join('');
+
+    mc.innerHTML = `
+      <div class="fade-in">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h1 style="font-size:22px;font-weight:800;color:var(--navy);margin:0">タレント実績データベース</h1>
+            <p style="font-size:13px;color:#64748b;margin:4px 0 0">全インフルエンサーの案件実績</p>
+          </div>
+        </div>
+        <div class="talent-summary-stats">
+          <div class="stat-card">
+            <div class="stat-label">総タレント数</div>
+            <div class="stat-value">${talents.length}</div>
+            <div class="stat-sub">人</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">総案件数</div>
+            <div class="stat-value">${cases.length}</div>
+            <div class="stat-sub">件</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">総販売セット数</div>
+            <div class="stat-value">${totalSales.toLocaleString()}</div>
+            <div class="stat-sub">セット</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">総売上（推計）</div>
+            <div class="stat-value" style="font-size:20px">¥${totalRevenue.toLocaleString()}</div>
+            <div class="stat-sub">円</div>
+          </div>
+        </div>
+        ${talents.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">タレントデータがありません</div>'
+          : `<div class="talent-grid">${cards}</div>`}
+      </div>`;
+  },
+
+  openTalentDetailModal(influencer) {
+    const cases = Storage.getAll().filter(c => c.influencer === influencer);
+    if (!cases.length) return;
+    const ig = cases[0].influencer_ig || '';
+
+    const caseRows = cases.map(c => {
+      const p4 = c.phase4 || {};
+      const sales = parseInt(p4.finalSales || 0);
+      const approved = parseInt(p4.approvedCount || 0);
+      const statusMap = { phase0:'ヒアリング中', phase1:'GO/STOP判定', phase2:'実施準備中', phase3:'当日運用中', phase4:'精算中', done:'完了' };
+      return `<tr>
+        <td style="padding:8px 12px;font-size:13px;color:#374151;border-bottom:1px solid #f1f5f9">${esc(c.name)}</td>
+        <td style="padding:8px 12px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9">${esc(c.platform)}</td>
+        <td style="padding:8px 12px;font-size:13px;font-weight:600;color:var(--navy);border-bottom:1px solid #f1f5f9">${sales > 0 ? sales.toLocaleString() : '—'}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #f1f5f9"><span class="badge badge-${c.status === 'done' ? 'done' : c.status}">${statusMap[c.status] || c.status}</span></td>
+      </tr>`;
+    }).join('');
+
+    const chartLabels = cases.map(c => c.name.length > 12 ? c.name.substring(0, 12) + '…' : c.name);
+    const chartData = cases.map(c => parseInt((c.phase4 || {}).finalSales || 0));
+
+    const existing = document.getElementById('talent-detail-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'talent-detail-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:680px">
+        <div class="modal-header">
+          <div>
+            <h2 style="font-size:18px;font-weight:800;color:var(--navy);margin:0">⭐ ${esc(influencer)}</h2>
+            ${ig ? `<a href="https://instagram.com/${esc(ig)}" target="_blank" style="font-size:12px;color:var(--teal);text-decoration:none">@${esc(ig)}</a>` : ''}
+          </div>
+          <button type="button" id="close-talent-modal" class="btn btn-ghost">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header"><h3>📊 案件別販売数</h3></div>
+            <div class="card-body">
+              <div style="height:200px"><canvas id="talent-sales-chart"></canvas></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>📋 案件一覧</h3></div>
+            <div class="card-body" style="padding:0;overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr style="background:#f8fafc">
+                    <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">案件名</th>
+                    <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">プラットフォーム</th>
+                    <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">販売数</th>
+                    <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">ステータス</th>
+                  </tr>
+                </thead>
+                <tbody>${caseRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="close-talent-modal-2">閉じる</button>
+          <button type="button" class="btn btn-primary" onclick="App.filterByTalent('${esc(influencer)}');document.getElementById('talent-detail-modal').remove()">案件一覧を見る</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+
+    // Init chart
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('talent-sales-chart');
+      if (canvas && typeof Chart !== 'undefined') {
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [{ label: '販売数', data: chartData, backgroundColor: 'rgba(13,148,136,0.7)', borderColor: '#0d9488', borderWidth: 1, borderRadius: 4 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { font: { size: 10 }, maxRotation: 30 } },
+              y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString(), font: { size: 10 } } }
+            }
+          }
+        });
+      }
+    });
+
+    const close = () => modal.remove();
+    modal.querySelector('#close-talent-modal').addEventListener('click', close);
+    modal.querySelector('#close-talent-modal-2').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  },
+
+  /* ── Calendar View ── */
+  renderCalendar() {
+    const mc = document.getElementById('main-content');
+    if (!mc) return;
+
+    if (this.calendarYear === null) {
+      const n = new Date();
+      this.calendarYear = n.getFullYear();
+      this.calendarMonth = n.getMonth(); // 0-indexed
+    }
+    const year = this.calendarYear;
+    const month = this.calendarMonth;
+    const cases = Storage.getAll();
+
+    // Aggregate events by date
+    const events = {};
+    const addEvent = (dateStr, ev) => {
+      if (!dateStr) return;
+      const key = String(dateStr).substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}/.test(key)) return;
+      if (!events[key]) events[key] = [];
+      events[key].push(ev);
+    };
+
+    // Conflict detection: find case IDs with overlapping periods for same influencer
+    const conflictIds = new Set();
+    for (let i = 0; i < cases.length; i++) {
+      for (let j = i + 1; j < cases.length; j++) {
+        const ci = cases[i], cj = cases[j];
+        if (!ci.influencer || ci.influencer !== cj.influencer) continue;
+        const p0i = ci.phase0 || {}, p0j = cj.phase0 || {};
+        if (!p0i.period_start || !p0i.period_end || !p0j.period_start || !p0j.period_end) continue;
+        const si = new Date(p0i.period_start), ei = new Date(p0i.period_end);
+        const sj = new Date(p0j.period_start), ej = new Date(p0j.period_end);
+        if (si <= ej && sj <= ei) { conflictIds.add(ci.id); conflictIds.add(cj.id); }
+      }
+    }
+
+    for (const c of cases) {
+      const p0 = c.phase0 || {};
+      const isConflict = conflictIds.has(c.id);
+      const base = { caseName: c.name, influencer: c.influencer || '', caseId: c.id, conflict: isConflict };
+      if (p0.post_start_date)   addEvent(p0.post_start_date,   { ...base, type: 'post-start', label: '📝 投稿開始' });
+      if (p0.period_start)      addEvent(p0.period_start,      { ...base, type: 'sale-start',  label: '🔴 販売開始' });
+      if (p0.period_end)        addEvent(p0.period_end,        { ...base, type: 'sale-end',    label: '🔵 販売終了' });
+      if (p0.platform_deadline) addEvent(p0.platform_deadline, { ...base, type: 'deadline',    label: '⏰ 申請期限' });
+    }
+
+    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const dayNames = ['月','火','水','木','金','土','日'];
+    const firstDay = new Date(year, month, 1);
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    let startOffset = firstDay.getDay() - 1; // Mon=0
+    if (startOffset < 0) startOffset = 6;
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    // Build cells
+    const cells = [];
+    const prevLastDay = new Date(year, month, 0).getDate();
+    for (let i = startOffset - 1; i >= 0; i--) cells.push({ day: prevLastDay - i, other: true, dateStr: null });
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      cells.push({ day: d, other: false, dateStr, isToday: dateStr === todayStr });
+    }
+    const rem = 7 - (cells.length % 7);
+    if (rem < 7) for (let d = 1; d <= rem; d++) cells.push({ day: d, other: true, dateStr: null });
+
+    // Render grid cells
+    const gridCells = cells.map(cell => {
+      const dayEvents = cell.dateStr ? (events[cell.dateStr] || []) : [];
+      const cls = ['calendar-day', cell.other ? 'other-month' : '', cell.isToday ? 'today' : ''].filter(Boolean).join(' ');
+      const evHtml = dayEvents.slice(0, 3).map(ev => {
+        const evType = ev.conflict ? 'conflict' : ev.type;
+        const evJson = JSON.stringify({ type: ev.type, caseName: ev.caseName, influencer: ev.influencer, label: ev.label, conflict: ev.conflict });
+        const short = ev.caseName.length > 10 ? ev.caseName.substring(0, 10) + '…' : ev.caseName;
+        return `<span class="cal-event ${evType}" data-event="${esc(evJson)}">${esc(short)}</span>`;
+      }).join('');
+      const more = dayEvents.length > 3 ? `<span style="font-size:9px;color:#94a3b8">+${dayEvents.length - 3}</span>` : '';
+      return `<div class="${cls}"><div class="calendar-day-num">${cell.day}</div>${evHtml}${more}</div>`;
+    }).join('');
+
+    // Render timeline for mobile (this month events sorted by date)
+    const monthEvents = {};
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (events[dateStr] && events[dateStr].length) monthEvents[dateStr] = events[dateStr];
+    }
+    const timelineHtml = Object.entries(monthEvents).sort((a, b) => a[0].localeCompare(b[0])).map(([dateStr, evs]) => {
+      const dateObj = new Date(dateStr + 'T00:00:00');
+      const dateLabel = dateObj.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
+      const evRows = evs.map(ev => `<div class="cal-timeline-event ${ev.conflict ? 'conflict' : ev.type}">
+        <span style="font-size:14px;line-height:1">${ev.label.substring(0, 2)}</span>
+        <div><div style="font-weight:600">${esc(ev.caseName)}</div><div style="font-size:11px;opacity:0.8">${esc(ev.influencer)}</div></div>
+      </div>`).join('');
+      return `<div class="cal-timeline-day"><div class="cal-timeline-date">${dateLabel}</div><div class="cal-timeline-events">${evRows}</div></div>`;
+    }).join('');
+
+    // Conflict warning
+    const conflictWarning = conflictIds.size > 0
+      ? `<div class="conflict-warning">⚠️ 同じインフルエンサーに期間が重なる案件があります。該当イベントは黄色で表示されます。</div>`
+      : '';
+
+    mc.innerHTML = `
+      <div class="fade-in">
+        <div class="calendar-header">
+          <div>
+            <h1 style="font-size:22px;font-weight:800;color:var(--navy);margin:0">📅 カレンダー</h1>
+            <p style="font-size:13px;color:#64748b;margin:4px 0 0">案件日程一覧</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-outline btn-sm" id="cal-nav-prev">← 前月</button>
+            <span class="calendar-title">${year}年${monthNames[month]}</span>
+            <button class="btn btn-outline btn-sm" id="cal-nav-next">翌月 →</button>
+          </div>
+        </div>
+        ${conflictWarning}
+        <!-- Desktop grid -->
+        <div class="calendar-wrapper">
+          <div class="calendar-day-headers">${dayNames.map(d => `<div class="calendar-day-header">${d}</div>`).join('')}</div>
+          <div class="calendar-grid">${gridCells}</div>
+        </div>
+        <!-- Mobile timeline -->
+        <div class="cal-timeline">
+          ${Object.keys(monthEvents).length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">この月のイベントはありません</div>' : timelineHtml}
+        </div>
+        <!-- Legend -->
+        <div class="calendar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#ccfbf1"></div>📝 投稿開始日</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fee2e2"></div>🔴 販売開始</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div>🔵 販売終了</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fed7aa"></div>⏰ 申請期限</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fef9c3"></div>⚠️ スケジュール重複</div>
+        </div>
+      </div>`;
+
+    // Click anywhere to close popup
+    document.addEventListener('click', () => {
+      const p = document.getElementById('cal-popup');
+      if (p) p.remove();
+    }, { once: true, capture: true });
+  },
+
+  showCalEventPopup(data, x, y) {
+    const existing = document.getElementById('cal-popup');
+    if (existing) existing.remove();
+    const popup = document.createElement('div');
+    popup.id = 'cal-popup';
+    popup.className = 'cal-popup';
+    const typeLabel = { 'post-start': '📝 投稿開始', 'sale-start': '🔴 販売開始', 'sale-end': '🔵 販売終了', 'deadline': '⏰ 申請期限' };
+    popup.innerHTML = `
+      <div class="cal-popup-type">${esc(typeLabel[data.type] || data.type)}</div>
+      <div class="cal-popup-name">${esc(data.caseName)}</div>
+      <div class="cal-popup-inf">⭐ ${esc(data.influencer)}</div>
+      ${data.conflict ? '<div style="font-size:11px;color:#854d0e;margin-top:6px;background:#fef9c3;padding:4px 8px;border-radius:6px">⚠️ スケジュール重複あり</div>' : ''}`;
+    popup.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
+    popup.style.top = Math.min(y + 8, window.innerHeight - 160) + 'px';
+    document.body.appendChild(popup);
+  },
+
+  /* ── Brand Form URL Modal ── */
+  openFormUrlModal(caseId) {
+    const caseData = Storage.getById(caseId);
+    if (!caseData) return;
+    const existing = document.getElementById('form-url-modal');
+    if (existing) existing.remove();
+    const baseUrl = location.href.replace(location.hash, '').replace('index.html', '');
+    const formUrl = `${baseUrl}form.html?id=${encodeURIComponent(caseId)}`;
+    const modal = document.createElement('div');
+    modal.id = 'form-url-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:480px">
+        <div class="modal-header">
+          <h2>📋 ブランド向けヒアリングフォーム</h2>
+          <button type="button" id="close-form-url-modal" class="btn btn-ghost">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:#64748b;margin:0 0 12px">以下のURLをブランド担当者に共有してください。ブランドが入力すると自動でPhase 0に保存されます。</p>
+          <div class="form-url-box" id="form-url-text">${esc(formUrl)}</div>
+          <button type="button" class="btn-copy" id="copy-form-url-btn">📋 URLをコピー</button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="close-form-url-modal-2">閉じる</button>
+          <a href="${esc(formUrl)}" target="_blank" class="btn btn-primary">🔗 フォームを開く</a>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    const closeModal = () => modal.remove();
+    modal.querySelector('#close-form-url-modal').addEventListener('click', closeModal);
+    modal.querySelector('#close-form-url-modal-2').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    modal.querySelector('#copy-form-url-btn').addEventListener('click', async () => {
+      const url = modal.querySelector('#form-url-text').textContent;
+      const ok = await Share.copyToClipboard(url);
+      if (ok) {
+        const btn = modal.querySelector('#copy-form-url-btn');
+        btn.textContent = '✅ コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '📋 URLをコピー'; btn.classList.remove('copied'); }, 2000);
+      }
+    });
   },
 
   /* ── Share Modal ── */

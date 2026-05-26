@@ -151,8 +151,10 @@ const Storage = {
         const local = localGet();
         if (local.length === 0) {
           const sample = this.getSampleCase();
-          localSet([sample]);
+          const sampleYui = this.getSampleYuiCase();
+          localSet([sample, sampleYui]);
           await remoteUpsert(sample);
+          await remoteUpsert(sampleYui);
         } else {
           for (const c of local) await remoteUpsert(c);
         }
@@ -163,6 +165,109 @@ const Storage = {
       if (localGet().length === 0) localSet([this.getSampleCase()]);
       setSyncStatus('offline');
     }
+  },
+
+  /* ── Sample data: ゆい × Anua ── */
+  getSampleYuiCase() {
+    return {
+      id: 'sample-yui-001',
+      name: 'anua × PDRNセラム+ミスト × ゆい',
+      brand: 'Anua', platform: '楽天',
+      influencer: 'ゆい', influencer_ig: 'yui___12.8',
+      status: 'done', judgment: 'B',
+      createdAt: '2026-05-10T09:00:00.000Z',
+      updatedAt: '2026-05-20T12:00:00.000Z',
+      phase0: {
+        brand_name: 'Anua',
+        product_name: 'PDRNセラム30ml + PDRNミスト100ml',
+        product_concept: 'PDRNとミストのW保湿セット。毛穴・くすみケアに特化した韓国ブランド',
+        period_start: '2026-05-16T20:00', period_end: '2026-05-23T01:59',
+        pre_announce_date: '2026-05-11', post_start_date: '2026-05-11',
+        event_name_official: '楽天スーパーSALE',
+        platform_deadline: '2026-05-09',
+        price_regular: '9800', price_sale: '4900', discount_rate: '50',
+        set_contents: 'PDRNセラム30ml / PDRNミスト100ml',
+        purchase_limit_per_person: '3',
+        platform_coupon_applicable: 'yes', other_coupon_compatible: 'no',
+        shipping_origin: '韓国',
+        novelty_type: 'ミニ', novelty_count: '2000',
+        novelty_after_gift: 'PDRNシートマスク3枚セット全員プレゼント',
+        page_behavior_after_gift: '先着オプションが自動で選択不可になる',
+        lowest_price_claim_ok: 'yes',
+        reward_type: 'CPS',
+        client_reward_rate: '22', influencer_reward_rate: '15', reward_rate: '15',
+        conversion_point: '注文確定および決済完了',
+        point_deduction_policy: 'ポイント利用分は売上から控除',
+        approval_rate: '約92%', rejection_conditions: '決済待ち・注文キャンセル',
+        payment_closing: '5月末', payment_date: '翌月末', payment_cycle: '30',
+        sales_site: '楽天', lp_url: 'https://item.rakuten.co.jp/anuajapan/anua-yui-set/',
+        tracking_method: '楽天アフィリエイトタグ',
+        draft_check_required: 'yes', shooting_ok: 'no',
+        brand_messaging: '毛穴レス・くすみゼロへ。PDRNのWアプローチ',
+        gift_announce_strategy: '一括',
+        pr_tag_rule: '#PRまたはタイアップラベル(@anua.jp)',
+        ng_expressions: 'ブランドへのネガティブ表現NG',
+        competitor_ng: '競合スキンケアブランド全般',
+        material_usage_restrictions: '提供素材のみ使用可',
+        stock_count: '3000', shipping_lead_time: '3-5営業日',
+        cs_contact: 'cs@anua.jp',
+        sales_report_phases_agreed: 'yes', holiday_support_ok: 'yes',
+        emergency_contacts: [
+          { name: 'チャン ハジョン', role: 'ブランドメイン', phone: '-' },
+          { name: '鈴木（Anua JP）', role: 'バックアップ',   phone: '-' },
+          { name: '楽天担当',       role: '楽天担当',        phone: '-' }
+        ]
+      },
+      phase1: {
+        stop_items: {
+          conversion_point_confirmed: true, rejection_conditions_clear: true,
+          point_deduction_policy_confirmed: true, payment_cycle_confirmed: true,
+          approval_rate_disclosed: true, sales_cap_over_policy_confirmed: true,
+          coupon_operation_verified: true, price_display_matches_checkout: true,
+          server_load_verified: true, tracking_tag_installed: true,
+          stock_confirmed: true, shipping_lead_confirmed: true,
+          stockout_policy_confirmed: true, cs_contact_ready: true,
+          return_flow_clear: true, incident_response_confirmed: true,
+          pr_rule_confirmed: true, pharma_law_checked: true,
+          ng_expressions_shared: true, material_usage_clear: true,
+          emergency_contacts_confirmed: true, sales_report_schedule_agreed: true
+        },
+        caution_items: {
+          approval_rate_80plus: true, payment_60days_or_less: true,
+          price_attractive: true, lp_speed_ok: true,
+          guest_purchase_available: true, smartphone_ui_ok: true,
+          stock_sufficient: false, novelty_restocking_fast: true,
+          no_delivery_delay: true, cs_hours_sufficient: true,
+          gifting_available: true, materials_sufficient: true,
+          draft_check_ok: true, competitor_ng_reasonable: true,
+          low_incident_risk: true, influencer_confirmed: true,
+          holiday_support_ok: true, contact_responsive: true
+        }
+      },
+      phase2: {
+        confirmed_items: {
+          sales_content: true, reward: true, sales_site: true,
+          product: true, logistics: true, cs: true,
+          regulation: true, influencer: true, risk: true,
+          final_judgment: 'GO',
+          final_judgment_reason: 'ほぼ全チェック項目クリア。在庫3000個はやや少なめだが許容範囲。'
+        }
+      },
+      phase3: {
+        salesLog: [
+          {time:'00:10',count:180},{time:'00:30',count:320},{time:'01:00',count:510},
+          {time:'02:00',count:730},{time:'04:00',count:980},{time:'08:00',count:1200},
+          {time:'24:00',count:1580},{time:'48:00',count:1920},{time:'72:00',count:2100}
+        ],
+        giftRemaining: 0, alertLines: [1000, 500, 70]
+      },
+      phase4: {
+        finalSales: 2100, giftIncluded: 2000, giftExcluded: 100,
+        approvedCount: 1932, rejectedCount: 168,
+        notes: '先着2000個終了後に失速。在庫が少なかったため早期終了。',
+        retrospective: '【よかった点】ゆいさんの強いフォロワー層が購買に直結。開始2時間で730セット達成。\n【課題】①在庫3000個は少なかった（もっと多く確保すべきだった）②楽天スーパーSALEの競合が多く差別化が必要だった\n【次回改善】①在庫5000個以上を確保\n②ゆいさんの投稿スケジュールをより詳細に設定する'
+      }
+    };
   },
 
   /* ── Sample data (anua実案件) ── */

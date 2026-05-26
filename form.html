@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FORTIAS — アフィリエイト案件ヒアリング</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;margin:0;padding:0}
+    a{color:#0d9488}
+
+    /* Header */
+    .site-header{background:#1e3a5f;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px}
+    .site-header .logo{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+    .site-header .logo span{color:#14b8a6}
+    .site-header .subtitle{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px}
+
+    .page{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+
+    /* Case info banner */
+    .case-banner{background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px}
+    .case-banner-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .case-banner-name{font-size:17px;font-weight:800;color:#1e3a5f}
+    .case-banner-sub{font-size:13px;color:#64748b;margin-top:2px}
+
+    /* Intro */
+    .intro-box{background:#f0fdfa;border:1.5px solid #99f6e4;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:#134e4a;line-height:1.6}
+
+    /* Section card */
+    .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;overflow:hidden}
+    .section-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:1px solid #f1f5f9;transition:background .15s}
+    .section-header:hover{background:#f1f5f9}
+    .section-title-wrap{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#1e3a5f}
+    .section-icon{font-size:16px}
+    .section-arrow{font-size:12px;color:#94a3b8;transition:transform .2s}
+    .section-body{padding:16px;display:none}
+    .section-body.open{display:block}
+    .section-arrow.open{transform:rotate(180deg)}
+
+    /* Form fields */
+    .form-row{margin-bottom:14px}
+    .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    label.form-label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px}
+    .required{color:#ef4444;margin-left:2px}
+    input[type=text],input[type=number],input[type=url],input[type=date],input[type=datetime-local],textarea,select{
+      width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;
+      font-family:inherit;color:#1e293b;background:#fff;transition:border .15s;outline:none}
+    input:focus,textarea:focus,select:focus{border-color:#0d9488;box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+    textarea{min-height:80px;resize:vertical;line-height:1.6}
+    .form-hint{font-size:11px;color:#94a3b8;margin-top:4px;line-height:1.5;word-break:break-all}
+
+    /* Contact row */
+    .contact-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+
+    /* Submit area */
+    .submit-area{text-align:center;margin-top:24px}
+    .submit-note{font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.6}
+    .btn-submit{background:#0d9488;color:#fff;border:none;border-radius:12px;padding:14px 40px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;width:100%;max-width:320px}
+    .btn-submit:hover{background:#0f766e}
+    .btn-submit:disabled{background:#94a3b8;cursor:not-allowed}
+
+    /* Success screen */
+    .success-screen{display:none;text-align:center;padding:60px 20px}
+    .success-icon{font-size:64px;margin-bottom:16px}
+    .success-title{font-size:22px;font-weight:800;color:#1e3a5f;margin-bottom:8px}
+    .success-text{font-size:14px;color:#64748b;line-height:1.7}
+
+    /* Error */
+    .error-screen{display:none;text-align:center;padding:60px 20px;color:#94a3b8}
+    .error-icon{font-size:56px;margin-bottom:16px}
+
+    /* Loading */
+    .loading-screen{text-align:center;padding:60px 20px;color:#64748b}
+
+    @media(max-width:600px){
+      .form-row-2{grid-template-columns:1fr}
+      .contact-row{grid-template-columns:1fr}
+      .site-header{padding:12px 14px}
+      .page{padding:14px 12px 60px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <div class="logo">FORTIAS <span>アフィリエイト</span></div>
+    <div class="subtitle">案件ヒアリングフォーム</div>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Loading -->
+  <div class="loading-screen" id="loading-screen">
+    <div style="font-size:32px;margin-bottom:12px">⏳</div>
+    <div>読み込み中...</div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-screen" id="error-screen">
+    <div class="error-icon">🔒</div>
+    <h2 style="color:#1e3a5f;font-size:18px;margin-bottom:8px">URLが無効です</h2>
+    <p style="font-size:13px">担当者から正しいURLを再送してもらってください。</p>
+  </div>
+
+  <!-- Main form -->
+  <div id="main-form" style="display:none">
+    <div class="case-banner" id="case-banner">
+      <div class="case-banner-label">案件</div>
+      <div class="case-banner-name" id="case-name">—</div>
+      <div class="case-banner-sub" id="case-sub">—</div>
+    </div>
+
+    <div class="intro-box">
+      📋 以下のフォームにご入力いただき、送信してください。<br>
+      入力いただいた情報は担当者が確認後、案件に反映いたします。<br>
+      <strong>※ 報酬率（インフルエンサーへの支払い率）は別途社内管理となります。</strong>
+    </div>
+
+    <form id="hearing-form">
+
+      <!-- 基本情報 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">📋</span>基本情報</div>
+          <span class="section-arrow open">▼</span>
+        </div>
+        <div class="section-body open">
+          <div class="form-row">
+            <label class="form-label">商品名・SKU <span class="required">*</span></label>
+            <input type="text" name="product_name" required placeholder="例: PDRNセラム＋レチノールセラムセット">
+          </div>
+          <div class="form-row">
+            <label class="form-label">商品コンセプト・ターゲット</label>
+            <textarea name="product_concept" placeholder="例: 20〜40代向け。PDRNとレチノールを組み合わせたプレミアムスキンケア。"></textarea>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">販売開始日時（JST）<span class="required">*</span></label>
+              <input type="datetime-local" name="period_start" required>
+            </div>
+            <div>
+              <label class="form-label">販売終了日時（JST）<span class="required">*</span></label>
+              <input type="datetime-local" name="period_end" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">事前告知解禁日</label>
+              <input type="date" name="pre_announce_date">
+            </div>
+            <div>
+              <label class="form-label">プラットフォーム申請期限</label>
+              <input type="date" name="platform_deadline">
+              <div class="form-hint">楽天・Qoo10等への申請が必要な場合</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">セール・イベント名（正式名称）</label>
+            <input type="text" name="event_name_official" placeholder="例: 楽天カミトクSALE、Qoo10メガ割">
+            <div class="form-hint">投稿・クリエイティブで使用する公式名称</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 販売条件 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">🛒</span>販売条件</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">通常価格（円・税込）<span class="required">*</span></label>
+              <input type="number" name="price_regular" required placeholder="13600">
+            </div>
+            <div>
+              <label class="form-label">販売価格（円・税込）<span class="required">*</span></label>
+              <input type="number" name="price_sale" required placeholder="5984">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">割引率（%）</label>
+              <input type="number" name="discount_rate" placeholder="56">
+            </div>
+            <div>
+              <label class="form-label">1人あたり購入上限</label>
+              <input type="text" name="purchase_limit_per_person" placeholder="例: 2点まで、制限なし">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">セット内容・容量</label>
+            <textarea name="set_contents" placeholder="例: PDRNセラム 30ml / レチノールセラム 30ml / PDRNクリーム 60ml"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">発送元</label>
+            <select name="shipping_origin">
+              <option value="">— 選択 —</option>
+              <option value="国内">国内</option>
+              <option value="韓国">韓国</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">プラットフォーム専用クーポン</label>
+              <select name="platform_coupon_applicable">
+                <option value="">— 選択 —</option>
+                <option value="none">なし</option>
+                <option value="yes">あり（全商品）</option>
+                <option value="partial">あり（一部）</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">他クーポン・ポイント併用</label>
+              <select name="other_coupon_compatible">
+                <option value="">— 選択 —</option>
+                <option value="yes">可</option>
+                <option value="no">不可</option>
+                <option value="details">条件あり</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">ノベルティ・先着特典</label>
+            <select name="novelty_type" style="margin-bottom:8px">
+              <option value="">— 選択 —</option>
+              <option value="なし">なし</option>
+              <option value="フルサイズ">フルサイズ</option>
+              <option value="ミニ">ミニサイズ</option>
+              <option value="両方">フルサイズ＋ミニ（段階）</option>
+            </select>
+            <input type="number" name="novelty_count" placeholder="先着人数（例: 3000）" style="margin-bottom:8px">
+            <input type="text" name="novelty_after_gift" placeholder="先着終了後の特典（例: ミニサイズ全員プレゼント）">
+          </div>
+          <div class="form-row">
+            <label class="form-label">先着終了後のページ挙動</label>
+            <input type="text" name="page_behavior_after_gift" placeholder="例: 先着オプションが自動で選択不可になる">
+          </div>
+          <div class="form-row">
+            <label class="form-label">「過去最安値」「最安」訴求の可否</label>
+            <select name="lowest_price_claim_ok">
+              <option value="">— 選択 —</option>
+              <option value="yes">可能</option>
+              <option value="no">不可</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 報酬条件 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">💰</span>報酬条件</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">報酬タイプ <span class="required">*</span></label>
+              <select name="reward_type" required>
+                <option value="">— 選択 —</option>
+                <option value="CPS">CPS（売上連動）</option>
+                <option value="CPA">CPA（件数連動）</option>
+                <option value="固定+成果">固定＋成果</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">提示報酬率（%）<span class="required">*</span></label>
+              <input type="number" name="client_reward_rate" required placeholder="例: 25">
+              <div class="form-hint">弊社（GVA）へのお支払い率</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">成果計上ポイント <span class="required">*</span></label>
+            <input type="text" name="conversion_point" required placeholder="例: 注文確定かつ決済完了">
+          </div>
+          <div class="form-row">
+            <label class="form-label">否認条件（詳細）</label>
+            <input type="text" name="rejection_conditions" placeholder="例: 決済待ち・注文キャンセル">
+          </div>
+          <div class="form-row">
+            <label class="form-label">承認率（実績値）</label>
+            <input type="text" name="approval_rate" placeholder="例: 約95%">
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">締め日</label>
+              <input type="text" name="payment_closing" placeholder="例: 月末締め">
+            </div>
+            <div>
+              <label class="form-label">支払日</label>
+              <input type="text" name="payment_date" placeholder="例: 翌月末払い">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">支払サイクル（日数）</label>
+            <input type="number" name="payment_cycle" placeholder="例: 30">
+          </div>
+        </div>
+      </div>
+
+      <!-- 計測・導線 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">📊</span>計測・販売導線</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <label class="form-label">販売サイト・LP URL</label>
+            <input type="url" name="lp_url" placeholder="https://...">
+          </div>
+          <div class="form-row">
+            <label class="form-label">計測方法</label>
+            <input type="text" name="tracking_method" placeholder="例: 楽天アフィリエイトタグ、専用URL">
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">クーポンコード</label>
+              <input type="text" name="coupon_code" placeholder="例: GVA20">
+            </div>
+            <div>
+              <label class="form-label">リンク設置場所</label>
+              <input type="text" name="link_placement" placeholder="例: ストーリーリンクスタンプ、プロフィール">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- スケジュール・クリエイティブ -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">🎨</span>スケジュール・クリエイティブ</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">原稿（下書き）チェック</label>
+              <select name="draft_check_required">
+                <option value="">— 選択 —</option>
+                <option value="yes">必須</option>
+                <option value="no">不要</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">撮影協力</label>
+              <select name="shooting_ok">
+                <option value="">— 選択 —</option>
+                <option value="yes">可能</option>
+                <option value="no">不可</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">撮影場所（可能な場合）</label>
+            <input type="text" name="shooting_location" placeholder="例: 韓国本社、日本支社、なし">
+          </div>
+          <div class="form-row">
+            <label class="form-label">ブランドメッセージ・訴求軸</label>
+            <textarea name="brand_messaging" placeholder="例: 最強のツヤ・弾力肌へ。PDRNとレチノールの朝晩ルーティン。"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">先着ギフト告知戦略</label>
+            <select name="gift_announce_strategy">
+              <option value="">— 選択 —</option>
+              <option value="一括">一括（最初から全数告知）</option>
+              <option value="段階">段階（追加交渉演出）</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- レギュレーション -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">⚖️</span>レギュレーション</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <label class="form-label">PR表記ルール <span class="required">*</span></label>
+            <input type="text" name="pr_tag_rule" required placeholder="例: #PR または タイアップラベル設定（@brand）">
+          </div>
+          <div class="form-row">
+            <label class="form-label">NG表現</label>
+            <textarea name="ng_expressions" placeholder="例: ブランドへのネガティブ表現NG、他ECサイトとの比較NG"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">競合NG範囲</label>
+            <input type="text" name="competitor_ng" placeholder="例: 同カテゴリのスキンケアブランド全般">
+          </div>
+          <div class="form-row">
+            <label class="form-label">素材・資料の使用制限</label>
+            <textarea name="material_usage_restrictions" placeholder="例: 提供素材のみ使用可。二次加工・Confidential表記箇所の露出禁止。"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 在庫・物流・CS -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">📦</span>在庫・物流・CS</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">在庫確保数</label>
+              <input type="number" name="stock_count" placeholder="例: 5000">
+            </div>
+            <div>
+              <label class="form-label">出荷リードタイム</label>
+              <input type="text" name="shipping_lead_time" placeholder="例: 3〜5営業日">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label class="form-label">ノベルティ フルサイズ 数</label>
+              <input type="number" name="novelty_full_count" placeholder="例: 3000">
+            </div>
+            <div>
+              <label class="form-label">ノベルティ ミニ 数</label>
+              <input type="number" name="novelty_mini_count" placeholder="例: 5000">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">CS問い合わせ窓口</label>
+            <input type="text" name="cs_contact" placeholder="例: cs@brand.jp / 0120-XXX-XXX">
+          </div>
+          <div class="form-row">
+            <label class="form-label">返品・解約ポリシー</label>
+            <textarea name="return_policy" placeholder="例: 未開封のみ返品可（送料はブランド負担）"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 売上報告 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">📈</span>売上報告・当日体制</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <label class="form-label">分刻み売上報告への対応</label>
+            <select name="sales_report_phases_agreed">
+              <option value="">— 選択 —</option>
+              <option value="yes">対応可能（販売開始〜3時間は頻繁に共有）</option>
+              <option value="no">対応難しい</option>
+              <option value="details">条件あり（備考参照）</option>
+            </select>
+            <div class="form-hint">販売開始直後の初動把握に重要です</div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">休日・深夜の緊急対応</label>
+            <select name="holiday_support_ok">
+              <option value="">— 選択 —</option>
+              <option value="yes">対応可能</option>
+              <option value="no">対応不可</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 緊急連絡先 -->
+      <div class="section-card">
+        <div class="section-header" onclick="toggleSection(this)">
+          <div class="section-title-wrap"><span class="section-icon">🚨</span>緊急連絡先（最低3名）</div>
+          <span class="section-arrow">▼</span>
+        </div>
+        <div class="section-body">
+          <p style="font-size:12px;color:#64748b;margin:0 0 12px">メイン担当・バックアップ・楽天/プラットフォーム担当を入力してください</p>
+          <div id="contacts-list">
+            <div class="contact-entry" style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;color:#0d9488;margin-bottom:8px">担当者 1（メイン）</div>
+              <div class="contact-row">
+                <div><label class="form-label">氏名</label><input type="text" name="ec_name_0" placeholder="例: チャン ハジョン"></div>
+                <div><label class="form-label">役割</label><input type="text" name="ec_role_0" placeholder="例: ブランドメイン"></div>
+                <div><label class="form-label">電話番号</label><input type="text" name="ec_phone_0" placeholder="例: 090-XXXX-XXXX"></div>
+              </div>
+            </div>
+            <div class="contact-entry" style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px">担当者 2（バックアップ）</div>
+              <div class="contact-row">
+                <div><label class="form-label">氏名</label><input type="text" name="ec_name_1" placeholder="例: 鈴木 太郎"></div>
+                <div><label class="form-label">役割</label><input type="text" name="ec_role_1" placeholder="例: バックアップ"></div>
+                <div><label class="form-label">電話番号</label><input type="text" name="ec_phone_1" placeholder="例: 090-XXXX-XXXX"></div>
+              </div>
+            </div>
+            <div class="contact-entry" style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px">担当者 3（プラットフォーム担当等）</div>
+              <div class="contact-row">
+                <div><label class="form-label">氏名</label><input type="text" name="ec_name_2" placeholder="例: 楽天担当 田中"></div>
+                <div><label class="form-label">役割</label><input type="text" name="ec_role_2" placeholder="例: 楽天担当"></div>
+                <div><label class="form-label">電話番号</label><input type="text" name="ec_phone_2" placeholder=""></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-area">
+        <div class="submit-note">
+          入力内容は送信後、担当者が確認いたします。<br>
+          ご不明点は担当者までお問い合わせください。
+        </div>
+        <button type="submit" class="btn-submit" id="submit-btn">送信する →</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Success -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">送信完了しました</div>
+    <div class="success-text">
+      ご入力ありがとうございます。<br>
+      担当者が確認の上、ご連絡いたします。<br><br>
+      <span style="font-size:12px;color:#94a3b8">このページは閉じていただいて構いません。</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+  const SUPABASE_URL = 'https://wptypwicojylajpdrekn.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_lFZKEdbAzARnf6O8qz_0Ww_r1E31BJU';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Get case ID from URL
+  const params = new URLSearchParams(location.search);
+  const caseId = params.get('id');
+
+  async function init() {
+    if (!caseId) { showError(); return; }
+    try {
+      const { data, error } = await sb
+        .from('cases')
+        .select('id, name, brand, platform, influencer, data')
+        .eq('id', caseId)
+        .single();
+      if (error || !data) { showError(); return; }
+
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('main-form').style.display = 'block';
+      document.getElementById('case-name').textContent = data.name || '案件名未設定';
+      document.getElementById('case-sub').textContent =
+        [data.brand, data.platform, data.influencer].filter(Boolean).join(' · ');
+
+      // Pre-fill existing phase0 data
+      const p0 = (data.data || {}).phase0 || {};
+      const form = document.getElementById('hearing-form');
+      Object.entries(p0).forEach(([key, val]) => {
+        if (key.startsWith('ec_')) return;
+        const el = form.querySelector(`[name="${key}"]`);
+        if (el && val !== undefined && val !== null) el.value = val;
+      });
+      // Emergency contacts
+      const contacts = p0.emergency_contacts || [];
+      contacts.forEach((c, i) => {
+        ['name','role','phone'].forEach(prop => {
+          const el = form.querySelector(`[name="ec_${prop}_${i}"]`);
+          if (el && c[prop]) el.value = c[prop];
+        });
+      });
+    } catch(e) {
+      showError();
+    }
+  }
+
+  function showError() {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('error-screen').style.display = 'block';
+  }
+
+  // Section toggle
+  window.toggleSection = function(header) {
+    const body = header.nextElementSibling;
+    const arrow = header.querySelector('.section-arrow');
+    const isOpen = body.classList.toggle('open');
+    if (arrow) arrow.classList.toggle('open', isOpen);
+  };
+
+  // Form submit
+  document.getElementById('hearing-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+
+    const fd = new FormData(e.target);
+    const p0 = {};
+    for (const [key, val] of fd.entries()) {
+      if (!key.startsWith('ec_')) { p0[key] = val; }
+    }
+    // Build emergency contacts
+    const contacts = [];
+    for (let i = 0; i < 3; i++) {
+      contacts.push({
+        name:  fd.get(`ec_name_${i}`)  || '',
+        role:  fd.get(`ec_role_${i}`)  || '',
+        phone: fd.get(`ec_phone_${i}`) || ''
+      });
+    }
+    p0.emergency_contacts = contacts;
+    p0.form_submitted_at = new Date().toISOString();
+
+    try {
+      // Fetch current case data and merge
+      const { data: current } = await sb.from('cases').select('data').eq('id', caseId).single();
+      const existing = current?.data || {};
+      const merged = { ...existing, phase0: { ...(existing.phase0 || {}), ...p0 } };
+
+      const { error } = await sb.from('cases').update({
+        data: merged,
+        name: existing.name || '',
+        updated_at: new Date().toISOString()
+      }).eq('id', caseId);
+
+      if (error) throw error;
+
+      document.getElementById('main-form').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+    } catch(err) {
+      btn.disabled = false;
+      btn.textContent = '送信する →';
+      alert('送信に失敗しました。もう一度お試しください。\n' + err.message);
+    }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
