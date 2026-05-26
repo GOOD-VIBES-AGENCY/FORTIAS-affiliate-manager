@@ -45,6 +45,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* #bottom-navは外側なのでここに overflow をかけても fixed が壊れない */
+  overflow-x: hidden;
 }
 
 #main-content {

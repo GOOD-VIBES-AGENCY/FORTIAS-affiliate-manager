@@ -402,12 +402,12 @@ const Phases = {
     return `
       <div class="fade-in" data-case-id="${esc(caseId)}" data-phase="phase1">
         <!-- AI自動判定ボタン -->
-        <div style="background:linear-gradient(135deg,#1e3a5f,#0d9488);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-          <div>
-            <div style="color:#fff;font-size:14px;font-weight:700;margin-bottom:2px">🤖 Phase 0データから自動判定</div>
-            <div style="color:rgba(255,255,255,0.7);font-size:12px">Phase 0の入力内容を分析し、チェック項目を自動判定します</div>
+        <div style="background:linear-gradient(135deg,#1e3a5f,#0d9488);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;max-width:100%;box-sizing:border-box">
+          <div style="min-width:0;flex:1">
+            <div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:2px">🤖 Phase 0から自動判定</div>
+            <div style="color:rgba(255,255,255,0.7);font-size:11px;word-break:break-all">Phase 0の入力内容を分析し、チェック項目を自動判定します</div>
           </div>
-          <button type="button" id="auto-score-btn" data-case-id="${esc(caseId)}" style="background:#fff;color:#1e3a5f;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;白-space:nowrap">✨ 自動判定する</button>
+          <button type="button" id="auto-score-btn" data-case-id="${esc(caseId)}" style="background:#fff;color:#1e3a5f;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">✨ 自動判定</button>
         </div>
         ${jBox}
         <div class="card" style="margin-bottom:16px">
