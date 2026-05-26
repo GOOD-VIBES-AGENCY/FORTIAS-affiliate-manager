@@ -322,9 +322,9 @@ const App = {
             <span class="badge ${smCls[caseData.status] || 'badge-phase0'}">${sm[caseData.status] || caseData.status}</span>
             ${caseData.judgment && caseData.judgment !== 'pending'
               ? `<span class="badge badge-judge badge-${caseData.judgment}">判定: ${esc(caseData.judgment)}</span>` : ''}
-            <button class="btn btn-outline btn-sm" id="share-btn" data-case-id="${esc(id)}">🔗 共有リンク生成</button>
-            <button class="btn btn-outline btn-sm" id="form-url-btn" data-case-id="${esc(id)}">📋 ブランド向けフォーム発行</button>
-            <button class="btn btn-danger btn-sm" id="delete-case-btn" data-case-id="${esc(id)}">🗑 削除</button>
+            <button class="btn btn-outline btn-sm" id="share-btn" data-case-id="${esc(id)}">🔗 共有</button>
+            <button class="btn btn-teal btn-sm" id="form-url-btn" data-case-id="${esc(id)}">📋 フォーム発行</button>
+            <button class="btn btn-danger btn-sm" id="delete-case-btn" data-case-id="${esc(id)}">🗑</button>
           </div>
         </div>
 
