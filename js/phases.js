@@ -286,13 +286,10 @@ const Phases = {
       : '';
 
     // 楽天・ Qoo10 などプラットフォーム固有の注意事項バナー
+    const bannerBase = 'border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;word-break:break-all;overflow-wrap:break-word;overflow:hidden';
     const platformBanners = {
-      '楽天': `<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#9a3412">
-        ⚠️ <strong>楽天セール案件</strong>：セール前に楽天側への事前申請が必要です。「プラットフォーム申請期限」を必ず確認してください。
-      </div>`,
-      'Qoo10': `<div style="background:#f0f9ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af">
-        ⚠️ <strong>Qoo10メガ割案件</strong>：メガ割期間が定期開催されます。開催スケジュールと商品登録期限を事前に確認してください。
-      </div>`
+      '楽天': `<div style="background:#fff7ed;border:1.5px solid #fed7aa;color:#9a3412;${bannerBase}">⚠️ <strong>楽天セール案件</strong>：セール前に楽天側への事前申請が必要です。「プラットフォーム申請期限」を必ず確認してください。</div>`,
+      'Qoo10': `<div style="background:#f0f9ff;border:1.5px solid #93c5fd;color:#1e40af;${bannerBase}">⚠️ <strong>Qoo10メガ割案件</strong>：メガ割期間が定期開催されます。開催スケジュールと商品登録期限を事前に確認してください。</div>`
     };
     const platformBanner = platformBanners[caseData.platform] || '';
 
