@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GVA 案件共有ページ</title>
+  <title>フォーティアス 案件共有ページ</title>
   <meta name="robots" content="noindex,nofollow">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -250,7 +250,7 @@
         <div class="icon">🔒</div>
         <h2>URLが無効です</h2>
         <p>共有URLが正しくないか、期限が切れている可能性があります。<br>
-        GVA担当者に新しいURLを発行してもらってください。</p>
+        担当者に新しいURLを発行してもらってください。</p>
       </div>`;
       return;
     }
@@ -272,7 +272,7 @@
     if (perm === 'influencer') {
       restrictionHtml = `<div class="restriction-box">
         <span class="icon">ℹ️</span>
-        <p>このページはインフルエンサー向けの情報です。クライアントへの請求率・GVAマージンは含まれていません。</p>
+        <p>このページはインフルエンサー向けの情報です。クライアントへの請求率・マージンは含まれていません。</p>
       </div>`;
     } else if (perm === 'client') {
       restrictionHtml = `<div class="restriction-box">
@@ -328,7 +328,7 @@
       if (p4.client_revenue !== undefined && p4.influencer_revenue !== undefined) {
         const margin = (p4.client_revenue || 0) - (p4.influencer_revenue || 0);
         revenueHtml += `<div style="background:#fefce8;border:1.5px solid #fde047;border-radius:10px;padding:14px 16px;margin-bottom:10px">
-          <div class="rev-title" style="color:#92400e">🏢 GVAマージン</div>
+          <div class="rev-title" style="color:#92400e">🏢 マージン</div>
           <div class="rev-amount" style="color:#ca8a04">${fmtMoney(margin)}</div>
         </div>`;
       }
@@ -510,7 +510,7 @@
 
       <!-- Footer -->
       <div style="text-align:center;padding:20px 0;color:#94a3b8;font-size:11px">
-        <div style="margin-bottom:4px">GOOD VIBES AGENCY — アフィリエイト案件管理システム</div>
+        <div style="margin-bottom:4px">フォーティアス — アフィリエイト案件管理システム</div>
         <div>このページは機密情報を含みます。無断転送を禁じます。</div>
       </div>`;
   }

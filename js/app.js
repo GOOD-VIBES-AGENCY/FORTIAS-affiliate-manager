@@ -1,7 +1,7 @@
 'use strict';
 
 /* ─────────────────────────────────────────────────────────────
-   GVA Affiliate Manager — Main App
+   フォーティアス Affiliate Manager — Main App
 ───────────────────────────────────────────────────────────── */
 const App = {
   saveTimeout: null,
@@ -129,7 +129,7 @@ const App = {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
           <div>
             <h1 style="font-size:22px;font-weight:800;color:var(--navy);margin:0">案件一覧</h1>
-            <p style="font-size:13px;color:#64748b;margin:4px 0 0">GVA アフィリエイト案件管理</p>
+            <p style="font-size:13px;color:#64748b;margin:4px 0 0">フォーティアス アフィリエイト案件管理</p>
           </div>
           <button class="btn btn-primary" onclick="App.navigate('#/new')">+ 新規案件</button>
         </div>
@@ -743,7 +743,7 @@ const App = {
         <div class="modal-body">
           <p style="font-size:13px;color:#64748b;margin-bottom:16px">
             共有する相手に応じてタイプを選択してください。<br>
-            <strong style="color:#991b1b">GVAマージンはいかなる場合も非表示です。</strong>
+            <strong style="color:#991b1b">マージンはいかなる場合も非表示です。</strong>
           </p>
 
           <label class="perm-option selected" for="perm-staff">
@@ -753,7 +753,7 @@ const App = {
               <span class="perm-badge perm-badge-staff">STAFF ONLY</span>
             </div>
             <div class="perm-option-desc">
-              全情報を含む。提示報酬率(${esc(String(clientRate))}%)・インフル報酬率(${esc(String(infRate))}%)・GVAマージン・内部メモ・GO/STOP判定すべて表示。
+              全情報を含む。提示報酬率(${esc(String(clientRate))}%)・インフル報酬率(${esc(String(infRate))}%)・マージン・内部メモ・GO/STOP判定すべて表示。
             </div>
           </label>
 
@@ -765,7 +765,7 @@ const App = {
             </div>
             <div class="perm-option-desc">
               案件概要・スケジュール・インフル報酬率(${esc(String(infRate))}%)・販売実績を表示。
-              <strong>クライアント請求率・GVAマージン・内部メモは非表示。</strong>
+              <strong>クライアント請求率・マージン・内部メモは非表示。</strong>
             </div>
           </label>
 
@@ -777,7 +777,7 @@ const App = {
             </div>
             <div class="perm-option-desc">
               案件概要・スケジュール・提示報酬率(${esc(String(clientRate))}%)・販売実績を表示。
-              <strong>インフル報酬率・GVAマージン・内部メモは非表示。</strong>
+              <strong>インフル報酬率・マージン・内部メモは非表示。</strong>
             </div>
           </label>
 

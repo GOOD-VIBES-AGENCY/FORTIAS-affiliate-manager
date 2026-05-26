@@ -8,7 +8,7 @@
  *   influencer  → sees influencer_reward_rate only; no client_reward_rate, no margin, no internal notes
  *   client      → sees client_reward_rate only; no influencer_reward_rate, no margin, no internal notes
  *
- * GVA margin = client_reward_rate - influencer_reward_rate
+ * マージン = client_reward_rate - influencer_reward_rate
  * This is NEVER encoded in influencer or client share payloads.
  */
 const Share = {
@@ -62,7 +62,7 @@ const Share = {
     // staff   → both rates
     // influencer → influencer_reward_rate only
     // client     → client_reward_rate only
-    // GVA margin → staff only (calculated, not stored)
+    // マージン → staff only (calculated, not stored)
     if (permissionLevel === 'staff' || permissionLevel === 'client') {
       p0Base.client_reward_rate = p0.client_reward_rate;
     }
@@ -96,7 +96,7 @@ const Share = {
         p4Payload.influencer_revenue = Math.round((p4.approvedCount || 0) * price * rate);
       }
       if (permissionLevel === 'staff' || permissionLevel === 'client') {
-        // client can see what they owe GVA
+        // client can see what they owe
         const rate = parseFloat(p0.client_reward_rate || 0) / 100;
         const price = parseFloat(p0.price_sale || 0);
         p4Payload.client_revenue = Math.round((p4.approvedCount || 0) * price * rate);

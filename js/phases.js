@@ -8,7 +8,7 @@ const PHASE0_SECTIONS = [
     id: 'schedule', title: 'スケジュール制約', icon: '⏰', open: true,
     fields: [
       { key: 'rakuten_deadline',    label: '楽天側締め切り',   type: 'date',     required: true },
-      { key: 'reply_deadline',      label: 'GVA返答期限',      type: 'date',     required: true },
+      { key: 'reply_deadline',      label: '返答期限',      type: 'date',     required: true },
       { key: 'event_name_official', label: '正式イベント名',   type: 'text',     required: true, hint: '楽天コンテンツ・投稿に使用する公式名称' }
     ]
   },
@@ -277,7 +277,7 @@ const Phases = {
 
     const marginBadge = gvaMargin !== null
       ? `<div class="revenue-card gva" style="margin-bottom:16px">
-          <div class="revenue-title">🏢 GVAマージン（自動計算・内部のみ）</div>
+          <div class="revenue-title">🏢 マージン（自動計算・内部のみ）</div>
           <div class="revenue-amount">${gvaMargin}%</div>
           <div style="font-size:12px;color:#92400e;margin-top:4px;">= 提示報酬率(${p0.client_reward_rate || 0}%) − インフル報酬率(${p0.influencer_reward_rate || p0.reward_rate || 0}%)</div>
         </div>`
@@ -837,7 +837,7 @@ ${contactLines}
             </div>
           </div>
           <div class="revenue-card gva">
-            <div class="revenue-title">🏢 GVAマージン（内部管理）</div>
+            <div class="revenue-title">🏢 マージン（内部管理）</div>
             <div class="revenue-amount">${fmtMoney(gvaMargin)}</div>
             <div style="font-size:12px;color:#92400e;margin-top:4px">
               = クライアント請求 − インフル支払
