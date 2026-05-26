@@ -291,7 +291,7 @@ const Phases = {
         ⚠️ <strong>楽天セール案件</strong>：セール前に楽天側への事前申請が必要です。「プラットフォーム申請期限」を必ず確認してください。
       </div>`,
       'Qoo10': `<div style="background:#f0f9ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af">
-        ⚠️ <strong>Qoo10メガ割案件</strong>：メガ割期間が定期開催されます。开催スケジュールと商品登録期限を事前に確認してください。
+        ⚠️ <strong>Qoo10メガ割案件</strong>：メガ割期間が定期開催されます。開催スケジュールと商品登録期限を事前に確認してください。
       </div>`
     };
     const platformBanner = platformBanners[caseData.platform] || '';
