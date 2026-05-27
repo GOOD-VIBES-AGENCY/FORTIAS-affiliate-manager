@@ -582,8 +582,8 @@ const Phases = {
       return acc;
     }, []);
     const docsSection = docLines.length
-      ? '\n■ 共有資料\n' + docLines.join('\n')
-      : '';
+      ? `\n■ オリエンシート\n${docLines.join('\n')}`
+      : '■ オリエンシート\n  （未登録）';
 
     return `━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【案件概要】${name}
@@ -646,6 +646,7 @@ CS連絡先: ${csContact}
 開始〜30分: 5分ごとに報告
 30分〜3時間: 30分ごとに報告
 3時間以降: 1時間ごとに報告（在庫状況により随時）
+
 ${docsSection}
 
 ■ 緊急連絡先
