@@ -135,6 +135,21 @@ const PHASE0_SECTIONS = [
       { key: 'holiday_support_ok', label: '休日サポートOK', type: 'select',
         options: [{ v:'yes', l:'OK' }, { v:'no', l:'NG' }] }
     ]
+  },
+  {
+    id: 'documents', title: '資料・オリエンシート', icon: '📁', open: false,
+    fields: [
+      { key: 'doc_label_1', label: '資料①　名称', type: 'text', hint: '例: オリエンシート、レギュレーション、素材パック' },
+      { key: 'doc_url_1',   label: '資料①　URL（Google Drive 等）', type: 'url' },
+      { key: 'doc_label_2', label: '資料②　名称', type: 'text' },
+      { key: 'doc_url_2',   label: '資料②　URL', type: 'url' },
+      { key: 'doc_label_3', label: '資料③　名称', type: 'text' },
+      { key: 'doc_url_3',   label: '資料③　URL', type: 'url' },
+      { key: 'doc_label_4', label: '資料④　名称', type: 'text' },
+      { key: 'doc_url_4',   label: '資料④　URL', type: 'url' },
+      { key: 'doc_label_5', label: '資料⑤　名称', type: 'text' },
+      { key: 'doc_url_5',   label: '資料⑤　URL', type: 'url' }
+    ]
   }
 ];
 
@@ -240,7 +255,7 @@ function renderField(field, value, caseId) {
 
   let inputHtml = '';
   if (field.type === 'textarea') {
-    inputHtml = `<textarea class="form-control" data-case-id="${esc(caseId)}" data-field="${esc(field.key)}" rows="3">${esc(v)}</textarea>`;
+    inputHtml = `<textarea class="form-control" data-case-id="${esc(caseId)}" data-field="${esc(field.key)}" rows="${field.rows || 3}">${esc(v)}</textarea>`;
   } else if (field.type === 'select') {
     const opts = (field.options || []).map(o => {
       const val = typeof o === 'string' ? o : o.v;
@@ -546,54 +561,92 @@ const Phases = {
       ? contacts.map(c => `  ${c.role || '担当'}: ${c.name || '—'} / ${c.phone || '—'}`).join('\n')
       : '  （未設定）';
 
+    const couponLine = p0.platform_coupon_applicable === 'yes'
+      ? `プラットフォームクーポン: 利用可${p0.coupon_code ? '（コード: ' + p0.coupon_code + '）' : ''}\n他クーポン併用: ${p0.other_coupon_compatible === 'yes' ? '可' : 'NG'}`
+      : 'プラットフォームクーポン: 利用不可';
+
+    const draftLine = p0.draft_check_required === 'yes' ? '必須（投稿前に必ず送付してください）' : '不要';
+    const shootingLine = p0.shooting_ok === 'yes' ? `OK${p0.shooting_location ? '（場所: ' + p0.shooting_location + '）' : ''}` : 'NG（提供素材のみ使用）';
+    const materialLine = p0.material_usage_restrictions || '—';
+    const competitorNg = p0.competitor_ng || '—';
+    const returnPolicy = p0.return_policy || '—';
+    const shippingLead = p0.shipping_lead_time || '—';
+    const csContact   = p0.cs_contact || '—';
+    const trackMethod = p0.tracking_method || '—';
+    const linkPlace   = p0.link_placement || '—';
+
+    const docLines = [1,2,3,4,5].reduce((acc, i) => {
+      const lbl = p0[`doc_label_${i}`];
+      const url = p0[`doc_url_${i}`];
+      if (lbl || url) acc.push(`  ${lbl || '資料' + i}: ${url || '—'}`);
+      return acc;
+    }, []);
+    const docsSection = docLines.length
+      ? '\n■ 共有資料\n' + docLines.join('\n')
+      : '';
+
     return `━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【案件概要】${name}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-■ ブランド・商品
+■ ブランド・商品情報
 ブランド: ${brand}
-商品: ${product}
+商品名: ${product}
 セット内容: ${setContents}
-コンセプト: ${concept}
+コンセプト・ターゲット: ${concept}
+おすすめ訴求: ${msgng}
 
-■ おすすめポイント・訴求イメージ
-${msgng}
-
-■ 販売サイト・販売期間
+■ 販売情報
 販売サイト: ${site}
 正式イベント名: ${eventName}（投稿時はこの名称でコピペ）
 販売期間: ${pStart} 〜 ${pEnd}
+通常価格: ${priceReg}
+セール価格: ${priceSale}（${discount}）
+購入上限: ${limit}
+${couponLine}
+最安値訴求: ${p0.lowest_price_claim_ok === 'yes' ? '可' : 'NG'}
+商品ページURL: ${lpUrl}
 
 ■ 投稿スケジュール
-事前告知: ${preDt}〜
+事前告知解禁: ${preDt}〜
 投稿解禁: ${postStart}
-
-■ 販売条件
-セール価格: ${priceSale}（通常 ${priceReg} ${discount}）
-購入制限: ${limit}
 
 ■ 先着ギフト情報
 先着特典: 先着${noveltyCount}名様にノベルティ
-先着終了後: ${noveltyAfter}
+先着終了後プレゼント: ${noveltyAfter}
 告知方法: ${giftStrat}
-先着終了後のページ: ${pageBeh}
-商品ページ URL: ${lpUrl}
+先着終了後のページ表示: ${pageBeh}
 
-■ 報酬条件（あなた向け）
+■ クリエイティブ・投稿ルール
+原稿チェック: ${draftLine}
+自撮り・商品撮影: ${shootingLine}
+素材使用制限: ${materialLine}
+PRタグ: ${prTag}（必須）
+NG表現: ${ngExp}
+競合NG: ${competitorNg}
+
+■ 計測・リンク設置
+計測方法: ${trackMethod}
+リンク設置場所: ${linkPlace}
+
+■ 報酬条件
 報酬率: ${infRate}%
 計上タイミング: ${convPt}
 否認条件: ${rejCond}
+承認率目安: ${p0.approval_rate || '—'}
 締め日: ${payClose}
 支払日: ${payDate}
 
-■ 売上報告スケジュール（当日運用）
+■ 物流・CS情報
+出荷リードタイム: ${shippingLead}
+返品ポリシー: ${returnPolicy}
+CS連絡先: ${csContact}
+
+■ 売上報告（当日運用）
 開始〜30分: 5分ごとに報告
 30分〜3時間: 30分ごとに報告
 3時間以降: 1時間ごとに報告（在庫状況により随時）
-
-■ 投稿注意事項
-PRタグ: ${prTag}（必須）
-NG表現: ${ngExp}
+${docsSection}
 
 ■ 緊急連絡先
 ${contactLines}
@@ -880,7 +933,7 @@ ${contactLines}
             </div>
             <hr class="divider">
             ${revSection}
-            ${renderField({ key:'notes', label:'特記事項', type:'textarea' }, p4.notes, caseId)}
+            ${renderField({ key:'notes', label:'特記事項', type:'textarea', rows: 2 }, p4.notes, caseId)}
           </div>
         </div>
         <div class="card">
