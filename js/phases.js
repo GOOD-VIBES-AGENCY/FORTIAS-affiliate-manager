@@ -691,11 +691,21 @@ ${contactLines}
       return `<div class="alert-threshold ${cls}">${icon} 先着残り${a}個アラート（y = ${threshold}） ${reached ? '— 到達済み' : ''}</div>`;
     }).join('');
 
+    const periodStart = p0.period_start ? new Date(p0.period_start) : null;
     const logRows = log.map((entry, i) => {
       const prev = i > 0 ? log[i - 1].count : 0;
       const diff = entry.count - prev;
+      // 実際日時を計算（period_start + 経過時間）
+      let actualTime = '—';
+      if (periodStart) {
+        const [h, m] = (entry.time || '0:0').split(':').map(Number);
+        const ms = ((h || 0) * 60 + (m || 0)) * 60000;
+        const actual = new Date(periodStart.getTime() + ms);
+        actualTime = actual.toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      }
       return `<tr>
-        <td>${esc(entry.time)}</td>
+        <td style="font-size:12px;color:#64748b">${esc(actualTime)}</td>
+        <td style="font-weight:600">${esc(entry.time)}</td>
         <td><strong>${Number(entry.count).toLocaleString()}</strong></td>
         <td style="color:${diff > 0 ? '#16a34a' : '#64748b'}">+${diff.toLocaleString()}</td>
         <td>${noveltyCount ? Math.max(0, noveltyCount - entry.count).toLocaleString() : '—'}</td>
@@ -790,7 +800,7 @@ ${contactLines}
                   <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px">経過時間</label>
                   <div style="display:flex;gap:4px">
                     <input type="text" class="form-control" id="log-time-input" placeholder="例: 08:00" style="height:34px;font-size:13px;flex:1">
-                    <button type="button" class="btn btn-outline btn-sm" id="now-elapsed-btn" data-case-id="${esc(caseId)}" data-period-start="${esc(p0.period_start||'')}" style="height:34px;white-space:nowrap;padding:0 8px;font-size:11px" title="販売開始時刻からの経過時間を自動入力">📍 今の時間</button>
+
                   </div>
                 </div>
                 <div style="flex:1">
@@ -809,7 +819,7 @@ ${contactLines}
           <div class="card-body" style="padding:0;overflow-x:auto">
             <table class="sales-log-table">
               <thead><tr>
-                <th>時刻</th><th>累計</th><th>増分</th><th>先着残り</th><th></th>
+                <th>実際日時</th><th>経過</th><th>累計</th><th>増分</th><th>先着残り</th><th></th>
               </tr></thead>
               <tbody id="sales-log-tbody">${logRows}</tbody>
             </table>

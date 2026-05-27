@@ -627,27 +627,6 @@ const App = {
     }
 
     // Contact field changes (handled via input event delegation below)
-    // ① 今の経過時間を自動入力
-    if (btn.id === 'now-elapsed-btn') {
-      const periodStart = btn.dataset.periodStart;
-      const timeInput = document.getElementById('log-time-input');
-      if (!timeInput) return;
-      let ref = periodStart ? new Date(periodStart) : null;
-      if (!ref || isNaN(ref)) {
-        alert('販売開始日時（Phase 0）が未設定です。\nPhase 0の「販売開始日時」を先に入力してください。');
-        return;
-      }
-      const now = new Date();
-      const elapsedMs = now - ref;
-      if (elapsedMs < 0) { alert('販売開始前です'); return; }
-      const totalMins = Math.floor(elapsedMs / 60000);
-      const h = Math.floor(totalMins / 60);
-      const m = totalMins % 60;
-      timeInput.value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-      timeInput.focus();
-      return;
-    }
-
     // ⑦ クイックモード（必須項目のみ表示）
     if (btn.id === 'quick-mode-btn') {
       const phase0El = btn.closest('[data-phase="phase0"]');
