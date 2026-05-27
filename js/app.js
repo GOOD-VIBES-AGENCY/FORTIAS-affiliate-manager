@@ -627,6 +627,34 @@ const App = {
     }
 
     // Contact field changes (handled via input event delegation below)
+    // Save fixed slot
+    if (btn.classList.contains('save-fixed-slot-btn') && caseId) {
+      const time = btn.dataset.fixedTime;
+      const slotId = btn.dataset.slotId;
+      const input = document.getElementById(slotId);
+      if (!input) return;
+      const count = parseInt(input.value);
+      if (!time || isNaN(count)) { alert('累計販売数を入力してください'); return; }
+      const caseData = Storage.getById(caseId);
+      if (caseData) {
+        caseData.phase3 = caseData.phase3 || { salesLog: [] };
+        caseData.phase3.salesLog = caseData.phase3.salesLog || [];
+        const idx = caseData.phase3.salesLog.findIndex(e => e.time === time);
+        if (idx >= 0) { caseData.phase3.salesLog[idx].count = count; }
+        else { caseData.phase3.salesLog.push({ time, count }); }
+        caseData.phase3.salesLog.sort((a, b) => {
+          const toMins = s => { const [h, m] = s.split(':').map(Number); return (h||0)*60+(m||0); };
+          return toMins(a.time) - toMins(b.time);
+        });
+        Storage.save(caseData);
+        input.style.background = '#f0fdf4';
+        input.style.borderColor = '#86efac';
+        this.refreshSalesLog(caseData);
+        this.showSavedIndicator();
+      }
+      return;
+    }
+
     // Add sales log entry
     if (btn.id === 'add-log-btn' && caseId) {
       const timeInput = document.getElementById('log-time-input');

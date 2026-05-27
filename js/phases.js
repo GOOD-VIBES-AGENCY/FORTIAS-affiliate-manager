@@ -755,24 +755,45 @@ ${contactLines}
           </div>
         </div>
 
-        <!-- Add entry -->
+        <!-- Add entry: fixed slots + custom -->
         <div class="card" style="margin-bottom:16px">
           <div class="card-header">
-            <h3>➕ 売上データを追加</h3>
+            <h3>➕ 売上データ入力</h3>
             <span class="save-indicator" id="save-indicator">✓ 保存済み</span>
           </div>
-          <div class="card-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">経過時間（例: 00:30 / 02:00 / 24:00）</label>
-                <input type="text" class="form-control" id="log-time-input" placeholder="HH:MM または 経過時間:MM">
-              </div>
-              <div class="form-group">
-                <label class="form-label">累計販売数</label>
-                <input type="number" class="form-control" id="log-count-input" placeholder="例: 1500" min="0">
+          <div class="card-body" style="padding:12px 16px">
+            ${[{label:'第1フェーズ（0〜30分）',times:['00:05','00:10','00:15','00:20','00:25','00:30']},{label:'第2フェーズ（30分〜3時間）',times:['01:00','01:30','02:00','02:30','03:00']},{label:'第3フェーズ（3〜6時間）',times:['04:00','05:00','06:00']}].map(group => {
+              const rows = group.times.map(t => {
+                const existing = log.find(e => e.time === t);
+                const val = existing ? existing.count : '';
+                const slotId = 'slot-count-' + t.replace(':','-');
+                const saved = existing ? 'style="background:#f0fdf4;border-color:#86efac"' : '';
+                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9">
+                  <span style="font-size:13px;font-weight:600;color:#1e3a5f;width:52px;flex-shrink:0">${esc(t)}</span>
+                  <input type="number" id="${slotId}" class="form-control" value="${esc(String(val))}" placeholder="累計数" min="0" ${saved} style="flex:1;height:34px;font-size:13px">
+                  <button type="button" class="btn btn-primary btn-sm save-fixed-slot-btn" data-case-id="${esc(caseId)}" data-fixed-time="${esc(t)}" data-slot-id="${slotId}" style="white-space:nowrap;height:34px;padding:0 10px">保存</button>
+                </div>`;
+              }).join('');
+              return `<div style="margin-bottom:12px">
+                <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.05em;margin-bottom:4px">${esc(group.label)}</div>
+                ${rows}
+              </div>`;
+            }).join('')}
+            <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e2e8f0">
+              <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.05em;margin-bottom:8px">第4フェーズ以降（カスタム）</div>
+              <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">06:00以降は販売ペース・在庫状況に応じて都度入力</div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <div style="flex:1">
+                  <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px">経過時間</label>
+                  <input type="text" class="form-control" id="log-time-input" placeholder="例: 08:00" style="height:34px;font-size:13px">
+                </div>
+                <div style="flex:1">
+                  <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px">累計数</label>
+                  <input type="number" class="form-control" id="log-count-input" placeholder="例: 4200" min="0" style="height:34px;font-size:13px">
+                </div>
+                <button type="button" class="btn btn-primary" id="add-log-btn" data-case-id="${esc(caseId)}" style="height:34px;padding:0 14px">追加</button>
               </div>
             </div>
-            <button type="button" class="btn btn-primary" id="add-log-btn" data-case-id="${esc(caseId)}">追加</button>
           </div>
         </div>
 
