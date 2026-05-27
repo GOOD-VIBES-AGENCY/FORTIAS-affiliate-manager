@@ -1212,3 +1212,19 @@ textarea.form-control {
   .auto-score-box { border-radius: 16px 16px 0 0; max-height: 90vh; }
   .auto-score-modal { align-items: flex-end; padding: 0; }
 }
+
+
+/* ⑦ Quick mode: 必須項目のみ表示 */
+.quick-mode .form-group:not(:has(input[required], select[required])) {
+  display: none;
+}
+.quick-mode .form-group:has(.perm-badge-client) {
+  display: block;
+}
+/* required スパンを持つlabelの親は表示 */
+.quick-mode .form-group .required ~ * { display: block; }
+
+/* ⑦ Quick mode override (data-required approach) */
+.quick-mode .form-group:not([data-required]) {
+  display: none !important;
+}

@@ -269,7 +269,7 @@ function renderField(field, value, caseId) {
   }
 
   const hint = field.hint ? `<div class="form-hint">${esc(field.hint)}</div>` : '';
-  return `<div class="form-group">
+  return `<div class="form-group" ${field.required ? 'data-required="true"' : ''}>
     <label class="form-label">${esc(field.label)}${req}${badgeHtml}</label>
     ${inputHtml}${hint}
   </div>`;
@@ -340,7 +340,10 @@ const Phases = {
         <div class="card" style="margin-bottom:16px">
           <div class="card-header">
             <h3>📋 Phase 0 — ヒアリングシート</h3>
-            <span class="save-indicator" id="save-indicator">✓ 保存済み</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="save-indicator" id="save-indicator">✓ 保存済み</span>
+              <button type="button" id="quick-mode-btn" class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 10px">⚡ 必須項目のみ</button>
+            </div>
           </div>
           <div class="card-body">
             ${sections}
@@ -785,7 +788,10 @@ ${contactLines}
               <div style="display:flex;gap:8px;align-items:flex-end">
                 <div style="flex:1">
                   <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px">経過時間</label>
-                  <input type="text" class="form-control" id="log-time-input" placeholder="例: 08:00" style="height:34px;font-size:13px">
+                  <div style="display:flex;gap:4px">
+                    <input type="text" class="form-control" id="log-time-input" placeholder="例: 08:00" style="height:34px;font-size:13px;flex:1">
+                    <button type="button" class="btn btn-outline btn-sm" id="now-elapsed-btn" data-case-id="${esc(caseId)}" data-period-start="${esc(p0.period_start||'')}" style="height:34px;white-space:nowrap;padding:0 8px;font-size:11px" title="販売開始時刻からの経過時間を自動入力">📍 今の時間</button>
+                  </div>
                 </div>
                 <div style="flex:1">
                   <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px">累計数</label>

@@ -627,6 +627,39 @@ const App = {
     }
 
     // Contact field changes (handled via input event delegation below)
+    // ① 今の経過時間を自動入力
+    if (btn.id === 'now-elapsed-btn') {
+      const periodStart = btn.dataset.periodStart;
+      const timeInput = document.getElementById('log-time-input');
+      if (!timeInput) return;
+      let ref = periodStart ? new Date(periodStart) : null;
+      if (!ref || isNaN(ref)) {
+        alert('販売開始日時（Phase 0）が未設定です。\nPhase 0の「販売開始日時」を先に入力してください。');
+        return;
+      }
+      const now = new Date();
+      const elapsedMs = now - ref;
+      if (elapsedMs < 0) { alert('販売開始前です'); return; }
+      const totalMins = Math.floor(elapsedMs / 60000);
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      timeInput.value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      timeInput.focus();
+      return;
+    }
+
+    // ⑦ クイックモード（必須項目のみ表示）
+    if (btn.id === 'quick-mode-btn') {
+      const phase0El = btn.closest('[data-phase="phase0"]');
+      if (!phase0El) return;
+      const isQuick = phase0El.classList.toggle('quick-mode');
+      btn.textContent = isQuick ? '📋 全項目表示' : '⚡ 必須項目のみ';
+      btn.style.background = isQuick ? 'var(--teal)' : '';
+      btn.style.color = isQuick ? '#fff' : '';
+      btn.style.borderColor = isQuick ? 'var(--teal)' : '';
+      return;
+    }
+
     // Save fixed slot
     if (btn.classList.contains('save-fixed-slot-btn') && caseId) {
       const time = btn.dataset.fixedTime;
@@ -1124,10 +1157,16 @@ const App = {
       <div class="fade-in">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
           <div>
-            <h1 style="font-size:22px;font-weight:800;color:var(--navy);margin:0">タレント実績データベース</h1>
-            <p style="font-size:13px;color:#64748b;margin:4px 0 0">全インフルエンサーの案件実績</p>
+            <h1 style="font-size:22px;font-weight:800;color:var(--navy);margin:0">実績ダッシュボード</h1>
+            <p style="font-size:13px;color:#64748b;margin:4px 0 0">タレント・ブランド別の実績まとめ</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button type="button" id="view-talent-btn" class="btn btn-primary btn-sm">⭐ タレント別</button>
+            <button type="button" id="view-brand-btn" class="btn btn-outline btn-sm">🏷 ブランド別</button>
           </div>
         </div>
+        <div id="stats-talent-view">
+          <!-- タレント別（既存） -->
         <div class="talent-summary-stats">
           <div class="stat-card">
             <div class="stat-label">総タレント数</div>
@@ -1152,6 +1191,74 @@ const App = {
         </div>
         ${talents.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">タレントデータがありません</div>'
           : `<div class="talent-grid">${cards}</div>`}
+        </div><!-- end stats-talent-view -->
+
+        <div id="stats-brand-view" style="display:none">
+          ${this.renderBrandSummary(cases)}
+        </div>
+      </div>`;
+
+    // Tab toggle handlers
+    mc.querySelector('#view-talent-btn').addEventListener('click', () => {
+      mc.querySelector('#stats-talent-view').style.display = '';
+      mc.querySelector('#stats-brand-view').style.display = 'none';
+      mc.querySelector('#view-talent-btn').className = 'btn btn-primary btn-sm';
+      mc.querySelector('#view-brand-btn').className = 'btn btn-outline btn-sm';
+    });
+    mc.querySelector('#view-brand-btn').addEventListener('click', () => {
+      mc.querySelector('#stats-talent-view').style.display = 'none';
+      mc.querySelector('#stats-brand-view').style.display = '';
+      mc.querySelector('#view-talent-btn').className = 'btn btn-outline btn-sm';
+      mc.querySelector('#view-brand-btn').className = 'btn btn-primary btn-sm';
+    });
+  },
+
+  renderBrandSummary(cases) {
+    const brandMap = {};
+    for (const c of cases) {
+      const brand = c.brand || '未設定';
+      if (!brandMap[brand]) brandMap[brand] = { brand, cases: [] };
+      brandMap[brand].cases.push(c);
+    }
+    const brands = Object.values(brandMap).sort((a, b) => b.cases.length - a.cases.length);
+    if (!brands.length) return '<div style="text-align:center;padding:40px;color:#94a3b8">ブランドデータがありません</div>';
+
+    const rows = brands.map(b => {
+      const totalSales = b.cases.reduce((s, c) => s + parseInt((c.phase4||{}).finalSales||0), 0);
+      const doneCases = b.cases.filter(c => c.status === 'done');
+      const judgments = b.cases.map(c => c.judgment).filter(j => j && j !== 'pending');
+      const jCount = { A:0, B:0, C:0, D:0 };
+      judgments.forEach(j => { if (jCount[j] !== undefined) jCount[j]++; });
+      const jBadges = ['A','B','C','D'].filter(j => jCount[j] > 0)
+        .map(j => `<span class="badge badge-${j}" style="font-size:11px">${j}:${jCount[j]}</span>`).join(' ');
+      const platforms = [...new Set(b.cases.map(c => c.platform).filter(Boolean))].join(' / ');
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:10px 12px;font-weight:700;color:var(--navy)">${esc(b.brand)}</td>
+          <td style="padding:10px 12px;text-align:center">${b.cases.length}</td>
+          <td style="padding:10px 12px;text-align:center">${doneCases.length}</td>
+          <td style="padding:10px 12px;font-weight:700;color:var(--teal)">${totalSales > 0 ? totalSales.toLocaleString() : '—'}</td>
+          <td style="padding:10px 12px">${jBadges || '—'}</td>
+          <td style="padding:10px 12px;font-size:12px;color:#64748b">${esc(platforms) || '—'}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div class="card">
+        <div class="card-header"><h3>🏷 ブランド別実績</h3></div>
+        <div class="card-body" style="padding:0;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:#f8fafc;font-size:11px;color:#64748b">
+              <th style="padding:8px 12px;text-align:left">ブランド</th>
+              <th style="padding:8px 12px;text-align:center">案件数</th>
+              <th style="padding:8px 12px;text-align:center">完了</th>
+              <th style="padding:8px 12px;text-align:left">累計販売</th>
+              <th style="padding:8px 12px;text-align:left">判定</th>
+              <th style="padding:8px 12px;text-align:left">プラット</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       </div>`;
   },
 
